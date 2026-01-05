@@ -1,0 +1,14 @@
+{
+  "manifest_version": 3,
+  "name": "Yew Tab",
+  "version": "0.2.0",
+  "description": "用卡片方式展示 Edge 收藏夹。",
+  "permissions": ["bookmarks", "storage"],
+  "chrome_url_overrides": {
+    "newtab": "newtab.html"
+  },
+  "background": {
+    "service_worker": "background.js",
+    "type": "module"
+  }
+}
