@@ -1,5 +1,6 @@
 // 负责渲染书签卡片网格与交互状态。
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { chromeApi } from "../shared/chrome";
 import { MESSAGE_TYPES } from "../shared/constants";
 import { applyBookmarkChange, requestBookmarks } from "../lib/messaging";
 import { readBookmarkSnapshot, readLayoutState, writeLayoutState } from "../lib/storage";
@@ -86,9 +87,9 @@ export default function App() {
         void loadBookmarks();
       }
     };
-    chrome.runtime.onMessage.addListener(handler);
+    chromeApi.runtime.onMessage.addListener(handler);
     return () => {
-      chrome.runtime.onMessage.removeListener(handler);
+      chromeApi.runtime.onMessage.removeListener(handler);
     };
   }, [loadBookmarks]);
 

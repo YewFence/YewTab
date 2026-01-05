@@ -1,6 +1,7 @@
 // 负责后台消息路由、书签监听与缓存同步。
 import { applyBookmarkAction, loadBookmarkTree, subscribeBookmarkChanges } from "../lib/bookmarks";
 import { readBookmarkSnapshot, writeBookmarkSnapshot } from "../lib/storage";
+import { chromeApi } from "../shared/chrome";
 import { MESSAGE_TYPES } from "../shared/constants";
 import type { ApplyBookmarkChangeResponse, BookmarkAction, LoadBookmarksResponse } from "../shared/types";
 
@@ -20,7 +21,7 @@ const formatError = (error: unknown) => {
 };
 
 const broadcastBookmarksChanged = () => {
-  chrome.runtime.sendMessage({ type: MESSAGE_TYPES.BOOKMARKS_CHANGED });
+  chromeApi.runtime.sendMessage({ type: MESSAGE_TYPES.BOOKMARKS_CHANGED });
 };
 
 const refreshSnapshot = async (): Promise<void> => {
@@ -67,7 +68,7 @@ const handleApplyChange = async (payload: BookmarkAction): Promise<ApplyBookmark
   }
 };
 
-chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
+chromeApi.runtime.onMessage.addListener((message, _sender, sendResponse) => {
   if (!message || typeof message !== "object") {
     return false;
   }
@@ -82,7 +83,7 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
   return false;
 });
 
-chrome.runtime.onInstalled.addListener(() => {
+chromeApi.runtime.onInstalled.addListener(() => {
   void refreshSnapshot().catch((error) => logDebug("初始化缓存失败:", error));
 });
 

@@ -19,6 +19,15 @@
 - 初始化消息通道
 - 预加载书签缓存
 
+### 需求: dev_extension_hot_reload
+**模块:** extension-core
+开发时支持扩展级热重载与 dev API shim。
+
+#### 场景: dev_watch_reload
+执行 `pnpm dev` 后保存源码。
+- 扩展自动重载
+- 新标签页自动刷新
+
 ## 依赖
 - bookmark-sync
 - storage
@@ -26,3 +35,4 @@
 ## 变更历史
 - 202601051725_edge_newtab_bookmarks - 初始化规划
 - 202601051725_edge_newtab_bookmarks - 完成后台消息路由与书签监听
+- 202601052304_dev_extension_hot_reload - 开发时热重载与 shim 接入
