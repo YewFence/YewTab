@@ -1,4 +1,5 @@
 // 封装书签快照与布局状态的读写。
+import { chromeApi } from "../../shared/chrome";
 import { SNAPSHOT_VERSION, STORAGE_KEYS } from "../../shared/constants";
 import type { BookmarkSnapshot, BookmarkNode, LayoutState } from "../../shared/types";
 
@@ -8,7 +9,7 @@ const defaultLayoutState: LayoutState = {
 };
 
 export async function readBookmarkSnapshot(): Promise<BookmarkSnapshot | null> {
-  const result = await chrome.storage.local.get(STORAGE_KEYS.SNAPSHOT);
+  const result = await chromeApi.storage.local.get(STORAGE_KEYS.SNAPSHOT);
   return (result[STORAGE_KEYS.SNAPSHOT] as BookmarkSnapshot | undefined) ?? null;
 }
 
@@ -18,15 +19,15 @@ export async function writeBookmarkSnapshot(tree: BookmarkNode[]): Promise<Bookm
     updatedAt: new Date().toISOString(),
     tree
   };
-  await chrome.storage.local.set({ [STORAGE_KEYS.SNAPSHOT]: snapshot });
+  await chromeApi.storage.local.set({ [STORAGE_KEYS.SNAPSHOT]: snapshot });
   return snapshot;
 }
 
 export async function readLayoutState(): Promise<LayoutState> {
-  const result = await chrome.storage.local.get(STORAGE_KEYS.LAYOUT);
+  const result = await chromeApi.storage.local.get(STORAGE_KEYS.LAYOUT);
   return (result[STORAGE_KEYS.LAYOUT] as LayoutState | undefined) ?? defaultLayoutState;
 }
 
 export async function writeLayoutState(nextState: LayoutState): Promise<void> {
-  await chrome.storage.local.set({ [STORAGE_KEYS.LAYOUT]: nextState });
+  await chromeApi.storage.local.set({ [STORAGE_KEYS.LAYOUT]: nextState });
 }
