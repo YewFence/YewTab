@@ -49,3 +49,9 @@ export type ApplyBookmarkChangeResponse = {
   success: boolean;
   error?: string;
 };
+
+export type SearchEngine = "bing" | "google" | "duckduckgo";
+
+export type SearchSettings = {
+  defaultEngine: SearchEngine;
+};
