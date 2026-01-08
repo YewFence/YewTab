@@ -7,6 +7,7 @@ import { readBookmarkSnapshot, readLayoutState, writeLayoutState } from "../lib/
 import type { BookmarkAction, BookmarkNode, LayoutState } from "../shared/types";
 import BookmarkCard from "./components/bookmark-card";
 import FolderCard from "./components/folder-card";
+import SearchBar from "./components/search-bar";
 
 const emptyLayout: LayoutState = {
   pinnedIds: [],
@@ -134,6 +135,7 @@ export default function App() {
           <span className="brand__title">Yew Tab</span>
           <span className="brand__subtitle">书签一眼可见</span>
         </div>
+        <SearchBar />
         <div className="status">
           {offline && <span className="badge badge--warning">离线快照</span>}
           {lastUpdated && (
