@@ -5,9 +5,14 @@
   --accent: #ff7a59;
   --accent-2: #2f80ed;
   --card-bg: #ffffff;
-  --card-shadow: 0 12px 30px rgba(30, 22, 58, 0.15);
-  --glass: rgba(255, 255, 255, 0.55);
-  --border: rgba(28, 26, 36, 0.12);
+  --card-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  --card-shadow-hover: 0 12px 24px rgba(0, 0, 0, 0.12);
+  --glass: rgba(255, 255, 255, 0.8);
+  --border: rgba(28, 26, 36, 0.08);
+  --radius-lg: 20px;
+  --radius-md: 14px;
+  --grid-gap: 24px;
+  --card-min-width: 220px;
 }
 
 * {
@@ -16,278 +21,259 @@
 
 body {
   margin: 0;
-  font-family: "Avenir Next", "Segoe UI Variable Display", "Segoe UI", "Trebuchet MS", sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
   color: var(--ink);
-  background: radial-gradient(circle at top left, #ffe1d6 0%, #f7f0e8 35%, #f1f3ff 100%);
+  background: #f2f2f7; /* iOS standard background-ish */
   min-height: 100vh;
+  overflow-y: scroll;
 }
 
+/* Abstract background shapes */
 body::before,
 body::after {
   content: "";
   position: fixed;
   inset: auto;
-  width: 420px;
-  height: 420px;
-  background: radial-gradient(circle, rgba(47, 128, 237, 0.35), transparent 70%);
-  filter: blur(2px);
+  width: 60vw;
+  height: 60vw;
+  border-radius: 50%;
+  filter: blur(80px);
   z-index: 0;
   pointer-events: none;
+  opacity: 0.6;
 }
 
 body::before {
-  top: -120px;
-  right: -140px;
+  top: -20%;
+  left: -10%;
+  background: radial-gradient(circle, #a1c4fd 0%, transparent 70%);
 }
 
 body::after {
-  bottom: -180px;
-  left: -120px;
-  background: radial-gradient(circle, rgba(255, 122, 89, 0.35), transparent 70%);
+  bottom: -20%;
+  right: -10%;
+  background: radial-gradient(circle, #c2e9fb 0%, transparent 70%);
 }
 
 #root {
   position: relative;
   z-index: 1;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
 }
 
 .page {
-  padding: 36px clamp(20px, 6vw, 80px) 64px;
-  animation: fadeIn 0.6s ease-out;
+  padding: 40px clamp(20px, 5vw, 60px);
+  max-width: 1600px;
+  margin: 0 auto;
+  width: 100%;
+  flex: 1;
 }
 
+/* Header */
 .topbar {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 24px;
-  margin-bottom: 24px;
+  margin-bottom: 40px;
   flex-wrap: wrap;
 }
 
-.search-bar {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  flex: 1;
-  max-width: 600px;
-}
-
-.search-bar__input {
-  flex: 1;
-  padding: 10px 16px;
-  border-radius: 12px;
-  border: 1px solid var(--border);
-  background: rgba(255, 255, 255, 0.75);
-  font-size: 14px;
-  color: var(--ink);
-  transition: box-shadow 0.2s ease, border-color 0.2s ease;
-}
-
-.search-bar__input:focus {
-  outline: none;
-  border-color: var(--accent-2);
-  box-shadow: 0 0 0 3px rgba(47, 128, 237, 0.1);
-}
-
-.search-bar__input::placeholder {
-  color: var(--muted);
-}
-
-.search-bar__engine-selector {
-  padding: 10px 12px;
-  border-radius: 12px;
-  border: 1px solid var(--border);
-  background: rgba(255, 255, 255, 0.75);
-  font-size: 13px;
-  color: var(--ink);
-  cursor: pointer;
-  transition: box-shadow 0.2s ease;
-}
-
-.search-bar__engine-selector:hover {
-  box-shadow: 0 4px 12px rgba(30, 22, 58, 0.1);
-}
-
-.search-bar__engine-selector:focus {
-  outline: none;
-  border-color: var(--accent-2);
-  box-shadow: 0 0 0 3px rgba(47, 128, 237, 0.1);
-}
-
-.brand {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
 .brand__title {
-  font-size: clamp(24px, 3vw, 34px);
+  font-size: 28px;
   font-weight: 700;
-  letter-spacing: 0.3px;
+  letter-spacing: -0.5px;
 }
 
 .brand__subtitle {
   font-size: 14px;
   color: var(--muted);
+  font-weight: 500;
 }
 
-.status {
+/* Search Bar - iOS style */
+.search-bar {
   display: flex;
   align-items: center;
   gap: 12px;
-  flex-wrap: wrap;
+  flex: 1;
+  max-width: 500px;
+  background: rgba(255, 255, 255, 0.6);
+  backdrop-filter: blur(20px);
+  padding: 8px 12px;
+  border-radius: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  box-shadow: 0 2px 10px rgba(0,0,0,0.03);
+  transition: all 0.3s ease;
 }
 
-.badge {
-  padding: 6px 12px;
-  border-radius: 999px;
-  font-size: 12px;
-  border: 1px solid var(--border);
-  background: var(--glass);
-}
-
-.badge--warning {
-  background: rgba(255, 122, 89, 0.2);
-  color: #7d2c16;
-  border-color: rgba(255, 122, 89, 0.4);
-}
-
-.badge--ghost {
-  background: rgba(255, 255, 255, 0.65);
-}
-
-.primary-button,
-.ghost-button {
-  border-radius: 12px;
-  padding: 10px 16px;
-  font-size: 13px;
-  border: none;
-  cursor: pointer;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
-}
-
-.primary-button {
-  background: linear-gradient(135deg, var(--accent), #ffb85a);
-  color: #3b1b0f;
-  box-shadow: 0 10px 20px rgba(255, 122, 89, 0.25);
-}
-
-.ghost-button {
-  background: rgba(255, 255, 255, 0.75);
-  color: var(--ink);
-  border: 1px solid var(--border);
-}
-
-.primary-button:hover,
-.ghost-button:hover {
+.search-bar:focus-within {
+  background: rgba(255, 255, 255, 0.9);
+  box-shadow: 0 8px 20px rgba(0,0,0,0.08);
   transform: translateY(-1px);
-  box-shadow: 0 12px 24px rgba(30, 22, 58, 0.18);
 }
 
-.alert {
-  padding: 12px 16px;
-  border-radius: 12px;
-  background: rgba(255, 122, 89, 0.15);
-  border: 1px solid rgba(255, 122, 89, 0.3);
-  margin-bottom: 20px;
+.search-bar__input {
+  flex: 1;
+  border: none;
+  background: transparent;
+  font-size: 16px;
+  color: var(--ink);
+  padding: 4px;
 }
 
+.search-bar__input:focus {
+  outline: none;
+}
+
+/* Grid Layout */
 .grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-  gap: 18px;
+  /* Fixed width columns usually look better for strict iOS grid emulation, 
+     but responsive is safer. Using minmax. */
+  grid-template-columns: repeat(auto-fill, minmax(var(--card-min-width), 1fr));
+  gap: var(--grid-gap);
+  position: relative;
+}
+
+/* Card Styles */
+.card-wrapper {
+  position: relative;
+  /* Aspect ratio for the wrapper to reserve space */
+  aspect-ratio: 2.4 / 1;
+  z-index: 1;
 }
 
 .card {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
   background: var(--card-bg);
-  border: 1px solid var(--border);
-  border-radius: 18px;
-  padding: 18px;
+  border-radius: var(--radius-lg);
+  padding: 16px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  border: 1px solid transparent;
+  box-shadow: var(--card-shadow);
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
   text-align: left;
-  min-height: 120px;
+  /* Hover expansion logic will be handled by framer-motion or state if possible, 
+     but CSS hover is cheaper for simple size increase.
+     User wants "cover icons below", so z-index needs to pop.
+  */
+}
+
+/* Hover effect for non-expanded cards */
+.card-wrapper:hover .card {
+  z-index: 10;
+  width: 110%;
+  height: 140%;
+  top: -20%;
+  left: -5%;
+  box-shadow: var(--card-shadow-hover);
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(10px);
+}
+
+.card__icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 10px;
+  object-fit: contain;
+  background: #f0f0f5;
+  padding: 4px;
+  flex-shrink: 0;
+}
+
+.card__content {
+  flex: 1;
+  min-width: 0; /* For truncation */
   display: flex;
   flex-direction: column;
-  justify-content: space-between;
-  box-shadow: var(--card-shadow);
-  transition: transform 0.25s ease, box-shadow 0.25s ease;
-  cursor: pointer;
-  position: relative;
-  overflow: hidden;
-}
-
-.card::after {
-  content: "";
-  position: absolute;
-  inset: auto auto 0 0;
-  width: 100%;
-  height: 6px;
-  background: linear-gradient(90deg, var(--accent), var(--accent-2));
-  opacity: 0.5;
-}
-
-.card:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 18px 40px rgba(30, 22, 58, 0.18);
+  justify-content: center;
 }
 
 .card__title {
-  font-size: 16px;
+  font-size: 15px;
   font-weight: 600;
-  margin-bottom: 8px;
+  margin: 0 0 4px 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: var(--ink);
+}
+
+/* On hover, allow wrap if we expanded enough, but user asked for "full expand". 
+   If the box gets bigger, we can show more text. */
+.card-wrapper:hover .card__title {
+  white-space: normal;
 }
 
 .card__meta {
   font-size: 12px;
   color: var(--muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Close Button (Special Card) */
+.card--close {
+  background: rgba(255, 59, 48, 0.1);
+  color: #ff3b30;
+  justify-content: center;
+  aspect-ratio: 2.4 / 1; /* Match others */
+}
+.card--close:hover {
+  background: rgba(255, 59, 48, 0.2);
 }
 
 .card--folder {
-  background: linear-gradient(135deg, #fff8f0, #fff);
+  background: rgba(255, 255, 255, 0.5);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.4);
 }
 
-.card--bookmark {
-  background: linear-gradient(135deg, #f4f7ff, #fff);
-}
-
-.empty {
+/* Expanded Folder Area */
+.expanded-row-break {
   grid-column: 1 / -1;
+  width: 100%;
+  margin-top: -12px; /* Pull it up a bit if needed */
+  margin-bottom: 24px;
+  position: relative;
+  z-index: 5;
+}
+
+.expanded-container {
+  background: rgba(255, 255, 255, 0.4);
+  backdrop-filter: blur(20px);
+  border-radius: 24px;
   padding: 24px;
-  border-radius: 18px;
-  border: 1px dashed var(--border);
-  background: rgba(255, 255, 255, 0.6);
-  text-align: center;
-  color: var(--muted);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.5);
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(var(--card-min-width), 1fr));
+  gap: var(--grid-gap);
 }
 
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(8px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+/* When a folder is open, we might want to highlight it or dim others? 
+   For now, simple is best. */
+
+.status {
+  display: flex;
+  gap: 12px;
 }
 
-@media (max-width: 720px) {
-  .page {
-    padding: 24px 18px 48px;
-  }
-  .topbar {
-    align-items: flex-start;
-  }
-  .search-bar {
-    width: 100%;
-    max-width: 100%;
-    order: 3;
-  }
-  .status {
-    width: 100%;
-    justify-content: flex-start;
-  }
-  .card {
-    min-height: 110px;
-  }
+.primary-button {
+  background: #007aff;
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 12px;
+  font-weight: 600;
+  cursor: pointer;
 }

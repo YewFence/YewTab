@@ -6,7 +6,7 @@ export default defineManifest({
   name: "Yew Tab",
   version: "0.2.0",
   description: "用卡片方式展示 Edge 收藏夹。",
-  permissions: ["bookmarks", "storage"],
+  permissions: ["bookmarks", "storage", "favicon"],
   host_permissions: ["http://localhost/*"],
   chrome_url_overrides: {
     newtab: "src/newtab/newtab.html"
