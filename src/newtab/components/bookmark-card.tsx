@@ -1,3 +1,4 @@
+import { cn } from "@/lib/utils";
 import { getFaviconUrl } from "../utils";
 
 type BookmarkCardProps = {
@@ -21,20 +22,38 @@ export default function BookmarkCard({ title, url }: BookmarkCardProps) {
   };
 
   return (
-    <div className="card-wrapper">
-      <button className="card" type="button" onClick={handleOpen}>
-        <img 
-          src={getFaviconUrl(url)} 
-          alt="" 
-          className="card__icon"
+    <div className="relative aspect-[2.4/1] z-[1] group">
+      <button
+        className={cn(
+          "absolute inset-0 w-full h-full bg-card-bg rounded-radius-lg",
+          "p-4 flex items-center gap-4 border border-transparent",
+          "shadow-card cursor-pointer text-left",
+          "transition-all duration-300 ease-[cubic-bezier(0.25,0.8,0.25,1)]",
+          // 悬浮效果
+          "group-hover:z-10 group-hover:w-[110%] group-hover:h-[140%]",
+          "group-hover:top-[-20%] group-hover:left-[-5%]",
+          "group-hover:shadow-card-hover group-hover:bg-glass-strong",
+          "group-hover:backdrop-blur-[10px]"
+        )}
+        type="button"
+        onClick={handleOpen}
+      >
+        <img
+          src={getFaviconUrl(url)}
+          alt=""
+          className="w-11 h-11 rounded-[10px] object-contain bg-[#f0f0f5] p-1 shrink-0"
           onError={(e) => {
-            // Fallback to a generic icon if favicon fails
             (e.target as HTMLImageElement).src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23999' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='12' r='10'/%3E%3C/svg%3E";
           }}
         />
-        <div className="card__content">
-          <div className="card__title" title={title}>{title}</div>
-          {host && <div className="card__meta">{host}</div>}
+        <div className="flex-1 min-w-0 flex flex-col justify-center">
+          <div
+            className="text-[15px] font-semibold mb-1 truncate text-ink group-hover:whitespace-normal"
+            title={title}
+          >
+            {title}
+          </div>
+          {host && <div className="text-xs text-muted-text truncate">{host}</div>}
         </div>
       </button>
     </div>
