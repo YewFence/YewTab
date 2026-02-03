@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { cn } from "@/lib/utils";
 import { readSearchSettings, writeSearchSettings } from "../../lib/storage";
 import type { SearchEngine } from "../../shared/types";
 
@@ -38,16 +39,28 @@ export default function SearchBar() {
   };
 
   return (
-    <form className="search-bar" onSubmit={handleSearch}>
+    <form
+      className={cn(
+        "flex items-center gap-3 flex-1 max-w-[500px]",
+        "bg-white/60 backdrop-blur-[20px] px-3 py-2",
+        "rounded-[16px] border border-white/30",
+        "shadow-[0_2px_10px_rgba(0,0,0,0.03)]",
+        "transition-all duration-300",
+        "focus-within:bg-white/90",
+        "focus-within:shadow-[0_8px_20px_rgba(0,0,0,0.08)]",
+        "focus-within:-translate-y-px"
+      )}
+      onSubmit={handleSearch}
+    >
       <input
         type="text"
-        className="search-bar__input"
+        className="flex-1 border-none bg-transparent text-base text-ink p-1 focus:outline-none"
         placeholder="搜索..."
         value={query}
         onChange={(e) => setQuery(e.target.value)}
       />
       <select
-        className="search-bar__engine-selector"
+        className="bg-transparent border-none text-sm text-muted-text cursor-pointer focus:outline-none"
         value={engine}
         onChange={(e) => void handleEngineChange(e.target.value as SearchEngine)}
       >

@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { cn } from "@/lib/utils";
 import { chromeApi } from "../shared/chrome";
 import { MESSAGE_TYPES } from "../shared/constants";
 import { applyBookmarkChange, requestBookmarks } from "../lib/messaging";
@@ -186,7 +187,7 @@ export default function App() {
   const renderGrid = () => {
     if (currentNodes.length === 0) {
         return (
-          <div className="empty">
+          <div className="text-center py-12 text-muted-text">
             <p>这里还没有书签，先在 Edge 里收藏一些吧。</p>
           </div>
         );
@@ -225,16 +226,23 @@ export default function App() {
   };
 
   return (
-    <div className="page">
-      <header className="topbar">
-        <div className="brand">
-          <span className="brand__title">Yew Tab</span>
-          <span className="brand__subtitle">书签一眼可见</span>
+    <div className="px-[clamp(20px,5vw,60px)] py-10 max-w-[1600px] mx-auto w-full flex-1">
+      <header className="flex items-center justify-between gap-6 mb-10 flex-wrap">
+        <div>
+          <span className="text-[28px] font-bold tracking-tight block">Yew Tab</span>
+          <span className="text-sm text-muted-text font-medium">书签一眼可见</span>
         </div>
-        
+
         {activeFolderId && (
-            <button className="ghost-button" onClick={handleBackToRoot} type="button" style={{ marginRight: 'auto', marginLeft: '20px' }}>
-              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ marginRight: '6px', verticalAlign: 'middle' }}>
+            <button
+              className={cn(
+                "mr-auto ml-5 bg-transparent border-none cursor-pointer",
+                "text-muted-text hover:text-ink flex items-center"
+              )}
+              onClick={handleBackToRoot}
+              type="button"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-1.5 align-middle">
                   <polyline points="15 18 9 12 15 6"></polyline>
               </svg>
               返回上级
@@ -242,17 +250,32 @@ export default function App() {
         )}
 
         <SearchBar />
-        <div className="status">
-          {offline && <span className="badge badge--warning">离线快照</span>}
-          <button className="primary-button" onClick={handleCreateQuickBookmark} type="button">
+        <div className="flex gap-3">
+          {offline && (
+            <span className="px-3 py-1 rounded-full text-xs font-medium bg-amber-100 text-amber-700">
+              离线快照
+            </span>
+          )}
+          <button
+            className="bg-primary text-primary-foreground px-4 py-2 rounded-[12px] font-semibold cursor-pointer border-none"
+            onClick={handleCreateQuickBookmark}
+            type="button"
+          >
             快速新增
           </button>
         </div>
       </header>
 
-      {errorMessage && <div className="alert">{errorMessage}</div>}
+      {errorMessage && (
+        <div className="bg-destructive/10 text-destructive px-4 py-3 rounded-lg mb-6">
+          {errorMessage}
+        </div>
+      )}
 
-      <section className="grid" ref={gridRef}>
+      <section
+        className="grid grid-cols-[repeat(auto-fill,minmax(220px,1fr))] gap-6 relative [grid-auto-flow:row_dense]"
+        ref={gridRef}
+      >
         {renderGrid()}
       </section>
     </div>
