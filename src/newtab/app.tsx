@@ -6,7 +6,6 @@ import { readBookmarkSnapshot, readLayoutState, writeLayoutState } from "../lib/
 import type { BookmarkAction, BookmarkNode, LayoutState } from "../shared/types";
 import BookmarkCard from "./components/bookmark-card";
 import FolderCard from "./components/folder-card";
-import ExpandedFolder from "./components/expanded-folder";
 import SearchBar from "./components/search-bar";
 
 const emptyLayout: LayoutState = {
@@ -48,11 +47,10 @@ export default function App() {
   const [activeFolderId, setActiveFolderId] = useState<string | null>(null);
   
   // Inline Expansion State
-  const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set());
   const [columns, setColumns] = useState(4);
   const gridRef = useRef<HTMLDivElement>(null);
 
-  const [lastUpdated, setLastUpdated] = useState<string | null>(null);
   const [offline, setOffline] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
@@ -60,7 +58,6 @@ export default function App() {
     try {
       const response = await requestBookmarks();
       setTree(response.tree);
-      setLastUpdated(response.updatedAt);
       setOffline(response.fromCache);
       setErrorMessage(response.error ?? null);
       return;
@@ -68,7 +65,6 @@ export default function App() {
       const cached = await readBookmarkSnapshot();
       if (cached) {
         setTree(cached.tree);
-        setLastUpdated(cached.updatedAt);
         setOffline(true);
         setErrorMessage("书签读取失败，已切换至离线快照");
         return;
@@ -109,7 +105,7 @@ export default function App() {
       const colStr = gridStyle.gridTemplateColumns;
       // Handle "none" or empty string
       if (!colStr || colStr === "none") return;
-      
+
       const colCount = colStr.split(" ").length;
       setColumns(colCount > 0 ? colCount : 1);
     }
@@ -119,10 +115,19 @@ export default function App() {
     // Initial calculation
     // Timeout to ensure paint has happened or layout is stable
     const timer = setTimeout(updateColumns, 100);
-    window.addEventListener("resize", updateColumns);
+
+    // Debounced resize handler
+    let resizeTimer: ReturnType<typeof setTimeout>;
+    const handleResize = () => {
+      clearTimeout(resizeTimer);
+      resizeTimer = setTimeout(updateColumns, 150);
+    };
+
+    window.addEventListener("resize", handleResize);
     return () => {
-        window.removeEventListener("resize", updateColumns);
-        clearTimeout(timer);
+      window.removeEventListener("resize", handleResize);
+      clearTimeout(timer);
+      clearTimeout(resizeTimer);
     };
   }, [updateColumns, tree]); // Re-calc if tree changes (content might affect scrollbar/layout)
 
@@ -135,18 +140,20 @@ export default function App() {
 
   // Actions
   const handleFolderClick = (id: string) => {
-    if (expandedId === id) {
-      setExpandedId(null);
-    } else {
-      setExpandedId(id);
-      // Recalculate columns immediately in case layout shifted
-      updateColumns();
-    }
+    setExpandedIds(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) {
+        next.delete(id);
+      } else {
+        next.add(id);
+      }
+      return next;
+    });
   };
 
   const handleSubFolderOpen = async (id: string) => {
     // Navigate into the subfolder (Standard Navigation)
-    setExpandedId(null);
+    setExpandedIds(new Set());
     setActiveFolderId(id);
     const nextState = { ...layout, lastOpenFolder: id };
     setLayout(nextState);
@@ -155,7 +162,7 @@ export default function App() {
   };
 
   const handleBackToRoot = async () => {
-    setExpandedId(null);
+    setExpandedIds(new Set());
     setActiveFolderId(null);
     const nextState = { ...layout, lastOpenFolder: null };
     setLayout(nextState);
@@ -186,23 +193,10 @@ export default function App() {
     }
 
     const items = [];
-    let expandedNode: BookmarkNode | null = null;
-    let insertionIndex = -1;
-
-    if (expandedId) {
-        const idx = currentNodes.findIndex(n => n.id === expandedId);
-        if (idx !== -1) {
-            expandedNode = currentNodes[idx];
-            // Calculate end of row
-            const row = Math.floor(idx / columns);
-            const rowEnd = (row + 1) * columns - 1;
-            insertionIndex = Math.min(rowEnd, currentNodes.length - 1);
-        }
-    }
 
     for (let i = 0; i < currentNodes.length; i++) {
         const node = currentNodes[i];
-        const isExpanded = node.id === expandedId;
+        const isExpanded = expandedIds.has(node.id);
 
         if (node.children?.length) {
             items.push(
@@ -211,7 +205,10 @@ export default function App() {
                     title={getCardTitle(node)}
                     count={node.children.length}
                     isOpen={isExpanded}
-                    onOpen={() => handleFolderClick(node.id)}
+                    onToggle={() => handleFolderClick(node.id)}
+                    onDoubleClick={() => handleSubFolderOpen(node.id)}
+                    childrenNodes={node.children}
+                    onSubFolderClick={handleSubFolderOpen}
                 />
             );
         } else {
@@ -220,18 +217,6 @@ export default function App() {
                     key={node.id}
                     title={getCardTitle(node)}
                     url={node.url ?? ""}
-                />
-            );
-        }
-
-        if (i === insertionIndex && expandedNode && expandedNode.children) {
-            items.push(
-                <ExpandedFolder
-                    key={`expanded-${expandedNode.id}`}
-                    isOpen={true}
-                    childrenNodes={expandedNode.children}
-                    onClose={() => setExpandedId(null)}
-                    onOpenSubFolder={handleSubFolderOpen}
                 />
             );
         }
@@ -246,14 +231,19 @@ export default function App() {
           <span className="brand__title">Yew Tab</span>
           <span className="brand__subtitle">书签一眼可见</span>
         </div>
+        
+        {activeFolderId && (
+            <button className="ghost-button" onClick={handleBackToRoot} type="button" style={{ marginRight: 'auto', marginLeft: '20px' }}>
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ marginRight: '6px', verticalAlign: 'middle' }}>
+                  <polyline points="15 18 9 12 15 6"></polyline>
+              </svg>
+              返回上级
+            </button>
+        )}
+
         <SearchBar />
         <div className="status">
           {offline && <span className="badge badge--warning">离线快照</span>}
-          {activeFolderId && (
-            <button className="ghost-button" onClick={handleBackToRoot} type="button">
-              返回上级
-            </button>
-          )}
           <button className="primary-button" onClick={handleCreateQuickBookmark} type="button">
             快速新增
           </button>
