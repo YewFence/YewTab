@@ -13,6 +13,7 @@ import SearchBar from "./components/search-bar";
 import ContextMenu, { type ContextMenuItem } from "./components/context-menu";
 import EditBookmarkDialog from "./components/edit-bookmark-dialog";
 import ConfirmDialog from "./components/confirm-dialog";
+import Breadcrumb from "./components/breadcrumb";
 import type { ContextMenuTarget } from "./types";
 import SettingsModal from "@/newtab/settings";
 import { IconEdit, IconSettings } from "@/newtab/settings/icons";
@@ -20,7 +21,8 @@ import { Button } from "@/components/ui/button";
 
 const emptyLayout: LayoutState = {
   pinnedIds: [],
-  lastOpenFolder: null
+  lastOpenFolder: null,
+  startupFolderId: null
 };
 
 const findNodeById = (nodes: BookmarkNode[], id: string | null): BookmarkNode | null => {
@@ -47,6 +49,20 @@ const getTopLevelNodes = (tree: BookmarkNode[]): BookmarkNode[] => {
 
 const getCardTitle = (node: BookmarkNode): string => {
   return node.title || (node.url ?? "未命名");
+};
+
+const findPathInTree = (node: BookmarkNode, targetId: string): BookmarkNode[] | null => {
+  if (node.id === targetId) {
+    return [node];
+  }
+  const children = node.children ?? [];
+  for (const child of children) {
+    const sub = findPathInTree(child, targetId);
+    if (sub) {
+      return [node, ...sub];
+    }
+  }
+  return null;
 };
 
 export default function App() {
@@ -85,6 +101,9 @@ export default function App() {
   const [offline, setOffline] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [settingsOpen, setSettingsOpen] = useState(false);
+
+  const layoutRef = useRef(layout);
+  layoutRef.current = layout;
 
   const openContextMenu = useCallback((event: MouseEvent, target: ContextMenuTarget) => {
     if (Date.now() - suppressReactContextMenuRef.current < 50) {
@@ -190,11 +209,41 @@ export default function App() {
   useEffect(() => {
     void readLayoutState().then((state) => {
       setLayout(state);
+      if (state.startupFolderId) {
+        setActiveFolderId(state.startupFolderId);
+        return;
+      }
       if (state.lastOpenFolder) {
         setActiveFolderId(state.lastOpenFolder);
       }
     });
   }, []);
+
+  useEffect(() => {
+    // 启动文件夹如果被删除/移动导致不可达，则自动清除。
+    if (!tree.length) {
+      return;
+    }
+    const startupId = layout.startupFolderId;
+    if (!startupId) {
+      return;
+    }
+    const rootNodes = getTopLevelNodes(tree);
+    const found = findNodeById(rootNodes, startupId);
+    if (found) {
+      return;
+    }
+
+    setErrorMessage("启动文件夹已不存在，已自动清除设置");
+    setLayout((prev) => {
+      const next = { ...prev, startupFolderId: null };
+      void writeLayoutState(next);
+      return next;
+    });
+    if (activeFolderId === startupId) {
+      setActiveFolderId(null);
+    }
+  }, [tree, layout.startupFolderId, activeFolderId]);
 
   useEffect(() => {
     const handler = (message: { type?: string }) => {
@@ -248,6 +297,35 @@ export default function App() {
   );
   const currentNodes = currentFolder?.children ?? rootNodes;
 
+  const fullPath = useMemo(() => {
+    const root = tree[0];
+    if (!root || !activeFolderId) {
+      return [] as BookmarkNode[];
+    }
+    return findPathInTree(root, activeFolderId) ?? [];
+  }, [tree, activeFolderId]);
+
+  const breadcrumbSegments = useMemo(() => {
+    // fullPath[0] 通常是虚拟 root 节点（title: root），不展示。
+    const visible = fullPath.length >= 2 ? fullPath.slice(1) : [];
+    return visible.map((n) => ({ id: n.id, title: getCardTitle(n) }));
+  }, [fullPath]);
+
+  const navigateToFolder = useCallback(
+    async (id: string | null) => {
+      clearFolderClickTimer();
+      setExpandedIds(new Set());
+      setActiveFolderId(id);
+      setLayout((prev) => {
+        const next = { ...prev, lastOpenFolder: id };
+        void writeLayoutState(next);
+        return next;
+      });
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    },
+    []
+  );
+
   useEffect(() => {
     setOrderedIds(currentNodes.map((n) => n.id));
     reorderRequestIdRef.current += 1;
@@ -291,23 +369,30 @@ export default function App() {
 
   const handleSubFolderOpen = async (id: string) => {
     // Navigate into the subfolder (Standard Navigation)
-    clearFolderClickTimer();
-    setExpandedIds(new Set());
-    setActiveFolderId(id);
-    const nextState = { ...layout, lastOpenFolder: id };
-    setLayout(nextState);
-    await writeLayoutState(nextState);
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    await navigateToFolder(id);
   };
 
-  const handleBackToRoot = async () => {
-    clearFolderClickTimer();
-    setExpandedIds(new Set());
-    setActiveFolderId(null);
-    const nextState = { ...layout, lastOpenFolder: null };
-    setLayout(nextState);
-    await writeLayoutState(nextState);
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+  const handleBackToParent = async () => {
+    if (!activeFolderId) {
+      return;
+    }
+    const root = tree[0];
+    if (!root) {
+      await navigateToFolder(null);
+      return;
+    }
+    const path = findPathInTree(root, activeFolderId);
+    if (!path || path.length < 2) {
+      await navigateToFolder(null);
+      return;
+    }
+    // root -> X (top-level folder) 视为回到顶层。
+    if (path.length === 2) {
+      await navigateToFolder(null);
+      return;
+    }
+    const parent = path[path.length - 2];
+    await navigateToFolder(parent.id);
   };
 
   const handleCreateQuickBookmark = async () => {
@@ -330,7 +415,27 @@ export default function App() {
 
     const t = contextMenu.target;
     if (t.kind === "folder") {
+      const isStartup = layout.startupFolderId === t.id;
       return [
+        {
+          key: "startup",
+          label: isStartup ? "取消启动文件夹" : "设为启动文件夹",
+          onSelect: () => {
+            void (async () => {
+              const next = {
+                ...layoutRef.current,
+                startupFolderId: isStartup ? null : t.id,
+                lastOpenFolder: isStartup ? layoutRef.current.lastOpenFolder : t.id
+              };
+              setLayout(next);
+              await writeLayoutState(next);
+              closeContextMenu();
+              if (!isStartup) {
+                await navigateToFolder(t.id);
+              }
+            })();
+          }
+        },
         {
           key: "edit",
           label: "重命名...",
@@ -371,7 +476,7 @@ export default function App() {
         }
       }
     ];
-  }, [contextMenu, closeContextMenu]);
+  }, [contextMenu, closeContextMenu, navigateToFolder, layout.startupFolderId]);
 
   const parentIdForCurrentView = useMemo(() => {
     if (activeFolderId) {
@@ -385,13 +490,25 @@ export default function App() {
     const items: ReactNode[] = [];
 
     if (activeFolderId) {
+      const parentTitle = (() => {
+        const path = fullPath;
+        if (!path || path.length < 2) {
+          return "全部书签";
+        }
+        if (path.length === 2) {
+          return "全部书签";
+        }
+        const parent = path[path.length - 2];
+        return getCardTitle(parent);
+      })();
+
       items.push(
         <BackCard
           key="__back__"
-          title={currentFolder ? getCardTitle(currentFolder) : "返回上级"}
+          title={parentTitle}
           subtitle="返回上级"
           onClick={() => {
-            void handleBackToRoot();
+            void handleBackToParent();
           }}
         />
       );
@@ -546,6 +663,15 @@ export default function App() {
           </Button>
         </div>
       </header>
+
+      <div className="mb-6">
+        <Breadcrumb
+          segments={breadcrumbSegments}
+          onNavigate={(id) => {
+            void navigateToFolder(id);
+          }}
+        />
+      </div>
 
       {errorMessage && (
         <div className="bg-destructive/10 text-destructive px-4 py-3 rounded-lg mb-6">

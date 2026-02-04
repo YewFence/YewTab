@@ -36,6 +36,8 @@ export type BookmarkSnapshot = {
 export type LayoutState = {
   pinnedIds: string[];
   lastOpenFolder: string | null;
+  // 打开新标签页时始终跳转到该文件夹（为 null 时不启用）
+  startupFolderId: string | null;
 };
 
 export type LoadBookmarksResponse = {

@@ -37,7 +37,8 @@ const createMockTree = (): BookmarkNode[] => [
 
 const mockLayoutState: LayoutState = {
   pinnedIds: [],
-  lastOpenFolder: null
+  lastOpenFolder: null,
+  startupFolderId: null
 };
 
 const runtimeListeners = new Set<
