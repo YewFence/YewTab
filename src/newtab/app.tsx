@@ -13,6 +13,9 @@ import ContextMenu, { type ContextMenuItem } from "./components/context-menu";
 import EditBookmarkDialog from "./components/edit-bookmark-dialog";
 import ConfirmDialog from "./components/confirm-dialog";
 import type { ContextMenuTarget } from "./types";
+import SettingsModal from "@/newtab/settings";
+import { IconSettings } from "@/newtab/settings/icons";
+import { Button } from "@/components/ui/button";
 
 const emptyLayout: LayoutState = {
   pinnedIds: [],
@@ -75,6 +78,7 @@ export default function App() {
 
   const [offline, setOffline] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [settingsOpen, setSettingsOpen] = useState(false);
 
   const openContextMenu = useCallback((event: MouseEvent, target: ContextMenuTarget) => {
     if (Date.now() - suppressReactContextMenuRef.current < 50) {
@@ -420,13 +424,17 @@ export default function App() {
               离线快照
             </span>
           )}
-          <button
-            className="bg-primary text-primary-foreground px-4 py-2 rounded-[12px] font-semibold cursor-pointer border-none"
-            onClick={handleCreateQuickBookmark}
-            type="button"
+          <Button
+            variant="secondary"
+            className="h-10 w-10 px-0"
+            aria-label="打开设置"
+            onClick={() => setSettingsOpen(true)}
           >
+            <IconSettings className="h-5 w-5" />
+          </Button>
+          <Button variant="primary" onClick={handleCreateQuickBookmark}>
             快速新增
-          </button>
+          </Button>
         </div>
       </header>
 
@@ -514,6 +522,8 @@ export default function App() {
           return true;
         }}
       />
+
+      <SettingsModal open={settingsOpen} onClose={() => setSettingsOpen(false)} />
     </div>
   );
 }
