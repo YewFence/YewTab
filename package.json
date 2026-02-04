@@ -20,6 +20,8 @@
   },
   "devDependencies": {
     "@crxjs/vite-plugin": "^2.0.0",
+    "@eslint/eslintrc": "^3.0.0",
+    "@eslint/js": "^9.9.0",
     "@types/chrome": "^0.0.280",
     "@types/node": "^25.2.0",
     "@types/react": "^18.3.3",
