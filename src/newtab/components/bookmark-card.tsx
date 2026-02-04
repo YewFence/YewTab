@@ -10,6 +10,7 @@ type BookmarkCardProps = {
   id: string;
   title: string;
   url: string;
+  disableOpen?: boolean;
   onContextMenu?: (event: MouseEvent, target: ContextMenuTarget) => void;
   dragHandle?: SortableDragHandle | null;
   sortableRef?: (node: HTMLDivElement | null) => void;
@@ -21,6 +22,7 @@ export default function BookmarkCard({
   id,
   title,
   url,
+  disableOpen = false,
   onContextMenu,
   dragHandle,
   sortableRef,
@@ -41,86 +43,68 @@ export default function BookmarkCard({
   })();
 
   const handleOpen = () => {
+    if (disableOpen) {
+      return;
+    }
     if (url) {
       window.open(url, "_blank", "noopener,noreferrer");
     }
   };
 
+  const cardListeners = dragHandle
+    ? {
+        ...(dragHandle.attributes as unknown as Record<string, unknown>),
+        ...(dragHandle.listeners as unknown as Record<string, unknown>)
+      }
+    : null;
+
   return (
     <motion.div
-      className="relative aspect-[2.4/1] z-[1] group"
+      className={cn(
+        "relative aspect-[2.4/1] z-[1] group",
+        dragHandle ? "cursor-grab active:cursor-grabbing" : undefined
+      )}
       layout={!dndDragging}
       transition={dndDragging ? { duration: 0 } : layoutTransition}
-      ref={sortableRef}
+      ref={(node) => {
+        sortableRef?.(node);
+        dragHandle?.setActivatorNodeRef(node);
+      }}
       style={sortableStyle}
       data-yew-context="bookmark"
       data-yew-id={id}
       data-yew-title={title}
       data-yew-url={url}
+      {...(cardListeners as unknown as Record<string, unknown>)}
       onContextMenu={(e) => {
         e.preventDefault();
         e.stopPropagation();
         onContextMenu?.(e, { kind: "bookmark", id, title, url });
       }}
     >
-      {dragHandle && (
-        <button
-          type="button"
-          className={cn(
-            "absolute top-3 right-3 z-[20]",
-            "h-8 w-8 rounded-[10px]",
-            "grid place-items-center",
-            "bg-white/70 border border-black/5",
-            "backdrop-blur-[10px]",
-            "shadow-[0_2px_10px_rgba(0,0,0,0.06)]",
-            "opacity-0 group-hover:opacity-100 transition-opacity duration-200",
-            "cursor-grab active:cursor-grabbing"
-          )}
-          ref={dragHandle.setActivatorNodeRef as unknown as (node: HTMLButtonElement | null) => void}
-          {...(dragHandle.attributes as unknown as Record<string, unknown>)}
-          {...(dragHandle.listeners as unknown as Record<string, unknown>)}
-          aria-label="拖拽排序"
-          title="拖拽排序"
-          onClick={(e) => {
-            e.preventDefault();
-            e.stopPropagation();
-          }}
-        >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            width="16"
-            height="16"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            className="text-muted-text"
-          >
-            <circle cx="9" cy="5" r="1" />
-            <circle cx="9" cy="12" r="1" />
-            <circle cx="9" cy="19" r="1" />
-            <circle cx="15" cy="5" r="1" />
-            <circle cx="15" cy="12" r="1" />
-            <circle cx="15" cy="19" r="1" />
-          </svg>
-        </button>
-      )}
       <button
         className={cn(
           "absolute inset-0 w-full h-full bg-card-bg rounded-radius-lg",
           "p-4 flex items-center gap-4 border border-transparent",
-          "shadow-card cursor-pointer text-left",
+          "shadow-card text-left",
           "transition-all duration-300 ease-[cubic-bezier(0.25,0.8,0.25,1)]",
-          // 悬浮效果
-          "group-hover:z-10 group-hover:w-[110%] group-hover:h-[140%]",
-          "group-hover:top-[-20%] group-hover:left-[-5%]",
+          // 悬浮效果（整理模式下避免放大影响拖拽）
+          !dragHandle ? "group-hover:z-10 group-hover:w-[110%] group-hover:h-[140%]" : null,
+          !dragHandle ? "group-hover:top-[-20%] group-hover:left-[-5%]" : null,
           "group-hover:shadow-card-hover group-hover:bg-glass-strong",
-          "group-hover:backdrop-blur-[10px]"
+          "group-hover:backdrop-blur-[10px]",
+          dragHandle ? "cursor-grab active:cursor-grabbing" : "cursor-pointer"
         )}
         type="button"
-        onClick={handleOpen}
+        onClick={(e) => {
+          if (disableOpen) {
+            e.preventDefault();
+            e.stopPropagation();
+            return;
+          }
+          handleOpen();
+        }}
+        aria-disabled={disableOpen || undefined}
       >
         <img
           src={getFaviconUrl(url)}
