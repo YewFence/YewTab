@@ -43,69 +43,37 @@ export default function FolderCard({
     ? { duration: 0 }
     : { duration: 0.28, ease: [0.2, 0, 0, 1] as const };
 
+  const cardListeners = dragHandle
+    ? {
+        ...(dragHandle.attributes as unknown as Record<string, unknown>),
+        ...(dragHandle.listeners as unknown as Record<string, unknown>)
+      }
+    : null;
+
   return (
     <motion.div
       className={cn(
         "relative z-[1] group/folder",
-        isOpen ? "col-span-full aspect-auto z-[5]" : "aspect-[2.4/1]"
+        isOpen ? "col-span-full aspect-auto z-[5]" : "aspect-[2.4/1]",
+        dragHandle ? "cursor-grab active:cursor-grabbing" : undefined
       )}
       layout={!dndDragging}
       transition={dndDragging ? { duration: 0 } : layoutTransition}
-      ref={sortableRef}
+      ref={(node) => {
+        sortableRef?.(node);
+        dragHandle?.setActivatorNodeRef(node);
+      }}
       style={sortableStyle}
       data-yew-context="folder"
       data-yew-id={id}
       data-yew-title={title}
+      {...(cardListeners as unknown as Record<string, unknown>)}
       onContextMenu={(e) => {
         e.preventDefault();
         e.stopPropagation();
         onContextMenu?.(e, { kind: "folder", id, title });
       }}
     >
-      {dragHandle && !isOpen && (
-        <button
-          type="button"
-          className={cn(
-            "absolute top-3 right-3 z-[6]",
-            "h-8 w-8 rounded-[10px]",
-            "grid place-items-center",
-            "bg-white/70 border border-black/5",
-            "backdrop-blur-[10px]",
-            "shadow-[0_2px_10px_rgba(0,0,0,0.06)]",
-            "opacity-0 group-hover/folder:opacity-100 transition-opacity duration-200",
-            "cursor-grab active:cursor-grabbing"
-          )}
-          ref={dragHandle.setActivatorNodeRef as unknown as (node: HTMLButtonElement | null) => void}
-          {...(dragHandle.attributes as unknown as Record<string, unknown>)}
-          {...(dragHandle.listeners as unknown as Record<string, unknown>)}
-          aria-label="拖拽排序"
-          title="拖拽排序"
-          onClick={(e) => {
-            e.preventDefault();
-            e.stopPropagation();
-          }}
-        >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            width="16"
-            height="16"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            className="text-muted-text"
-          >
-            <circle cx="9" cy="5" r="1" />
-            <circle cx="9" cy="12" r="1" />
-            <circle cx="9" cy="19" r="1" />
-            <circle cx="15" cy="5" r="1" />
-            <circle cx="15" cy="12" r="1" />
-            <circle cx="15" cy="19" r="1" />
-          </svg>
-        </button>
-      )}
       <div
         className={cn(
           "flex flex-col p-0 bg-white/50 backdrop-blur-[10px]",
@@ -122,7 +90,8 @@ export default function FolderCard({
             className={cn(
               "w-full h-full text-left",
               "p-4 flex items-center gap-4",
-              "bg-transparent border-0 cursor-pointer"
+              "bg-transparent border-0",
+              dragHandle ? "cursor-grab active:cursor-grabbing" : "cursor-pointer"
             )}
             type="button"
             onClick={onToggle}

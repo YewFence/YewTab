@@ -15,7 +15,7 @@ import EditBookmarkDialog from "./components/edit-bookmark-dialog";
 import ConfirmDialog from "./components/confirm-dialog";
 import type { ContextMenuTarget } from "./types";
 import SettingsModal from "@/newtab/settings";
-import { IconSettings } from "@/newtab/settings/icons";
+import { IconEdit, IconSettings } from "@/newtab/settings/icons";
 import { Button } from "@/components/ui/button";
 
 const emptyLayout: LayoutState = {
@@ -53,6 +53,8 @@ export default function App() {
   const [tree, setTree] = useState<BookmarkNode[]>([]);
   const [layout, setLayout] = useState<LayoutState>(emptyLayout);
   const folderClickTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const [editMode, setEditMode] = useState(false);
 
   const [orderedIds, setOrderedIds] = useState<string[]>([]);
   const reorderRequestIdRef = useRef(0);
@@ -167,6 +169,22 @@ export default function App() {
         folderClickTimerRef.current = null;
       }
     };
+  }, []);
+
+  useEffect(() => {
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (!e.altKey) {
+        return;
+      }
+      if (e.key?.toLowerCase() !== "e") {
+        return;
+      }
+      e.preventDefault();
+      setEditMode((prev) => !prev);
+    };
+
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
   }, []);
 
   useEffect(() => {
@@ -409,7 +427,7 @@ export default function App() {
       <SortableGrid
         key={`__sortable__:${activeFolderId ?? "root"}`}
         ids={orderedNodes.map((n) => n.id)}
-        disabled={offline || !parentIdForCurrentView}
+        disabled={offline || !parentIdForCurrentView || !editMode}
         disabledIds={expandedIds}
         onReorder={(nextIds) => {
           const prev = orderedIds;
@@ -471,6 +489,7 @@ export default function App() {
               id={node.id}
               title={getCardTitle(node)}
               url={node.url ?? ""}
+              disableOpen={editMode}
               onContextMenu={openContextMenu}
               dragHandle={dragHandle}
               sortableRef={setNodeRef as unknown as (node: HTMLDivElement | null) => void}
@@ -500,6 +519,20 @@ export default function App() {
               离线快照
             </span>
           )}
+          <Button
+            variant="secondary"
+            className={
+              editMode
+                ? "h-10 px-3 border border-[rgba(47,128,237,0.28)] bg-[rgba(47,128,237,0.12)] text-[rgba(47,128,237,0.95)]"
+                : "h-10 px-3"
+            }
+            aria-label={editMode ? "退出整理模式" : "进入整理模式"}
+            title={editMode ? "退出整理模式 (Alt+E)" : "进入整理模式 (Alt+E)"}
+            onClick={() => setEditMode((v) => !v)}
+          >
+            <IconEdit className="h-5 w-5" />
+            <span className="text-sm">整理</span>
+          </Button>
           <Button
             variant="secondary"
             className="h-10 w-10 px-0"
