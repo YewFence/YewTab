@@ -1,11 +1,11 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { cn } from "@/lib/utils";
 import { chromeApi } from "../shared/chrome";
 import { MESSAGE_TYPES } from "../shared/constants";
 import { applyBookmarkChange, requestBookmarks } from "../lib/messaging";
 import { readBookmarkSnapshot, readLayoutState, writeLayoutState } from "../lib/storage";
 import type { BookmarkAction, BookmarkNode, LayoutState } from "../shared/types";
 import BookmarkCard from "./components/bookmark-card";
+import BackCard from "./components/back-card";
 import FolderCard from "./components/folder-card";
 import SearchBar from "./components/search-bar";
 
@@ -168,6 +168,7 @@ export default function App() {
     const nextState = { ...layout, lastOpenFolder: null };
     setLayout(nextState);
     await writeLayoutState(nextState);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const handleCreateQuickBookmark = async () => {
@@ -185,15 +186,29 @@ export default function App() {
 
   // Grid Rendering Logic
   const renderGrid = () => {
-    if (currentNodes.length === 0) {
-        return (
-          <div className="text-center py-12 text-muted-text">
-            <p>这里还没有书签，先在 Edge 里收藏一些吧。</p>
-          </div>
-        );
-    }
-
     const items = [];
+
+     if (activeFolderId) {
+       items.push(
+         <BackCard
+           key="__back__"
+           title={currentFolder ? getCardTitle(currentFolder) : "返回上级"}
+           subtitle="返回上级"
+           onClick={() => {
+             void handleBackToRoot();
+           }}
+         />
+       );
+     }
+
+     if (currentNodes.length === 0) {
+       items.push(
+         <div key="__empty__" className="col-span-full text-center py-12 text-muted-text">
+           <p>这里还没有书签，先在 Edge 里收藏一些吧。</p>
+         </div>
+       );
+       return items;
+     }
 
     for (let i = 0; i < currentNodes.length; i++) {
         const node = currentNodes[i];
@@ -232,22 +247,6 @@ export default function App() {
           <span className="text-[28px] font-bold tracking-tight block">Yew Tab</span>
           <span className="text-sm text-muted-text font-medium">书签一眼可见</span>
         </div>
-
-        {activeFolderId && (
-            <button
-              className={cn(
-                "mr-auto ml-5 bg-transparent border-none cursor-pointer",
-                "text-muted-text hover:text-ink flex items-center"
-              )}
-              onClick={handleBackToRoot}
-              type="button"
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-1.5 align-middle">
-                  <polyline points="15 18 9 12 15 6"></polyline>
-              </svg>
-              返回上级
-            </button>
-        )}
 
         <SearchBar />
         <div className="flex gap-3">
