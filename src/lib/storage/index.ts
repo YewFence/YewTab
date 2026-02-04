@@ -5,7 +5,8 @@ import type { BookmarkSnapshot, BookmarkNode, LayoutState, SearchSettings } from
 
 const defaultLayoutState: LayoutState = {
   pinnedIds: [],
-  lastOpenFolder: null
+  lastOpenFolder: null,
+  startupFolderId: null
 };
 
 export async function readBookmarkSnapshot(): Promise<BookmarkSnapshot | null> {
@@ -25,7 +26,9 @@ export async function writeBookmarkSnapshot(tree: BookmarkNode[]): Promise<Bookm
 
 export async function readLayoutState(): Promise<LayoutState> {
   const result = await chromeApi.storage.local.get(STORAGE_KEYS.LAYOUT);
-  return (result[STORAGE_KEYS.LAYOUT] as LayoutState | undefined) ?? defaultLayoutState;
+  const stored = result[STORAGE_KEYS.LAYOUT] as Partial<LayoutState> | undefined;
+  // 兼容旧版本：字段缺失时用默认值补齐。
+  return { ...defaultLayoutState, ...(stored ?? {}) } as LayoutState;
 }
 
 export async function writeLayoutState(nextState: LayoutState): Promise<void> {
