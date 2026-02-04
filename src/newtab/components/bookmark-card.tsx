@@ -1,3 +1,4 @@
+import { motion, useReducedMotion, type Transition } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { getFaviconUrl } from "../utils";
 
@@ -7,6 +8,11 @@ type BookmarkCardProps = {
 };
 
 export default function BookmarkCard({ title, url }: BookmarkCardProps) {
+  const reduceMotion = useReducedMotion();
+  const layoutTransition: Transition = reduceMotion
+    ? { duration: 0 }
+    : { duration: 0.28, ease: [0.2, 0, 0, 1] as const };
+
   const host = (() => {
     try {
       return url ? new URL(url).hostname : "";
@@ -22,7 +28,11 @@ export default function BookmarkCard({ title, url }: BookmarkCardProps) {
   };
 
   return (
-    <div className="relative aspect-[2.4/1] z-[1] group">
+    <motion.div
+      className="relative aspect-[2.4/1] z-[1] group"
+      layout
+      transition={layoutTransition}
+    >
       <button
         className={cn(
           "absolute inset-0 w-full h-full bg-card-bg rounded-radius-lg",
@@ -56,6 +66,6 @@ export default function BookmarkCard({ title, url }: BookmarkCardProps) {
           {host && <div className="text-xs text-muted-text truncate">{host}</div>}
         </div>
       </button>
-    </div>
+    </motion.div>
   );
 }
