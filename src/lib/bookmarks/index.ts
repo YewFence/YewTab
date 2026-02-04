@@ -23,11 +23,23 @@ export async function applyBookmarkAction(action: BookmarkAction): Promise<void>
       });
       return;
     case "remove":
-      if (action.recursive) {
-        await chromeApi.bookmarks.removeTree(action.id);
-      } else {
-        await chromeApi.bookmarks.remove(action.id);
+      // 当前版本：不允许删除任何文件夹（无论是否递归）。
+      // 仅允许删除「书签」节点。
+      try {
+        const nodes = await chromeApi.bookmarks.get(action.id);
+        const node = nodes?.[0];
+        const isFolder = !node?.url;
+        if (isFolder) {
+          throw new Error("当前版本不支持删除文件夹");
+        }
+      } catch (error) {
+        if (error instanceof Error) {
+          throw error;
+        }
+        throw new Error("删除前校验失败");
       }
+
+      await chromeApi.bookmarks.remove(action.id);
       return;
     case "update":
       await chromeApi.bookmarks.update(action.id, {

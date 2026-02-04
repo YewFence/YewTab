@@ -1,9 +1,12 @@
+import type { MouseEvent } from "react";
 import { motion, useReducedMotion, type Transition } from "framer-motion";
 import { cn } from "@/lib/utils";
-import { BookmarkNode } from "../../shared/types";
+import type { BookmarkNode } from "../../shared/types";
 import BookmarkCard from "./bookmark-card";
+import type { ContextMenuTarget } from "../types";
 
 type FolderCardProps = {
+  id: string;
   title: string;
   count: number;
   isOpen: boolean;
@@ -11,16 +14,19 @@ type FolderCardProps = {
   onDoubleClick: () => void;
   childrenNodes?: BookmarkNode[];
   onSubFolderClick?: (id: string) => void;
+  onContextMenu?: (event: MouseEvent, target: ContextMenuTarget) => void;
 };
 
 export default function FolderCard({
+  id,
   title,
   count,
   isOpen,
   onToggle,
   onDoubleClick,
   childrenNodes,
-  onSubFolderClick
+  onSubFolderClick,
+  onContextMenu
 }: FolderCardProps) {
   const reduceMotion = useReducedMotion();
   const layoutTransition: Transition = reduceMotion
@@ -35,6 +41,14 @@ export default function FolderCard({
       )}
       layout
       transition={layoutTransition}
+      data-yew-context="folder"
+      data-yew-id={id}
+      data-yew-title={title}
+      onContextMenu={(e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        onContextMenu?.(e, { kind: "folder", id, title });
+      }}
     >
       <div
         className={cn(
@@ -149,6 +163,7 @@ export default function FolderCard({
               node.children?.length ? (
                 <FolderCard
                   key={node.id}
+                  id={node.id}
                   title={node.title || "未命名"}
                   count={node.children.length}
                   isOpen={false}
@@ -156,12 +171,15 @@ export default function FolderCard({
                   onDoubleClick={() => onSubFolderClick?.(node.id)}
                   childrenNodes={node.children}
                   onSubFolderClick={onSubFolderClick}
+                  onContextMenu={onContextMenu}
                 />
               ) : (
                 <BookmarkCard
                   key={node.id}
+                  id={node.id}
                   title={node.title || (node.url ?? "")}
                   url={node.url ?? ""}
+                  onContextMenu={onContextMenu}
                 />
               )
             )}
