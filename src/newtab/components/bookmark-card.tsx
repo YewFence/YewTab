@@ -3,15 +3,30 @@ import { motion, useReducedMotion, type Transition } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { getFaviconUrl } from "../utils";
 import type { ContextMenuTarget } from "../types";
+import type { SortableDragHandle } from "./sortable-grid";
+import type { CSSProperties } from "react";
 
 type BookmarkCardProps = {
   id: string;
   title: string;
   url: string;
   onContextMenu?: (event: MouseEvent, target: ContextMenuTarget) => void;
+  dragHandle?: SortableDragHandle | null;
+  sortableRef?: (node: HTMLDivElement | null) => void;
+  sortableStyle?: CSSProperties;
+  dndDragging?: boolean;
 };
 
-export default function BookmarkCard({ id, title, url, onContextMenu }: BookmarkCardProps) {
+export default function BookmarkCard({
+  id,
+  title,
+  url,
+  onContextMenu,
+  dragHandle,
+  sortableRef,
+  sortableStyle,
+  dndDragging = false
+}: BookmarkCardProps) {
   const reduceMotion = useReducedMotion();
   const layoutTransition: Transition = reduceMotion
     ? { duration: 0 }
@@ -34,8 +49,10 @@ export default function BookmarkCard({ id, title, url, onContextMenu }: Bookmark
   return (
     <motion.div
       className="relative aspect-[2.4/1] z-[1] group"
-      layout
-      transition={layoutTransition}
+      layout={!dndDragging}
+      transition={dndDragging ? { duration: 0 } : layoutTransition}
+      ref={sortableRef}
+      style={sortableStyle}
       data-yew-context="bookmark"
       data-yew-id={id}
       data-yew-title={title}
@@ -46,6 +63,50 @@ export default function BookmarkCard({ id, title, url, onContextMenu }: Bookmark
         onContextMenu?.(e, { kind: "bookmark", id, title, url });
       }}
     >
+      {dragHandle && (
+        <button
+          type="button"
+          className={cn(
+            "absolute top-3 right-3 z-[20]",
+            "h-8 w-8 rounded-[10px]",
+            "grid place-items-center",
+            "bg-white/70 border border-black/5",
+            "backdrop-blur-[10px]",
+            "shadow-[0_2px_10px_rgba(0,0,0,0.06)]",
+            "opacity-0 group-hover:opacity-100 transition-opacity duration-200",
+            "cursor-grab active:cursor-grabbing"
+          )}
+          ref={dragHandle.setActivatorNodeRef as unknown as (node: HTMLButtonElement | null) => void}
+          {...(dragHandle.attributes as unknown as Record<string, unknown>)}
+          {...(dragHandle.listeners as unknown as Record<string, unknown>)}
+          aria-label="拖拽排序"
+          title="拖拽排序"
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+          }}
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="16"
+            height="16"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            className="text-muted-text"
+          >
+            <circle cx="9" cy="5" r="1" />
+            <circle cx="9" cy="12" r="1" />
+            <circle cx="9" cy="19" r="1" />
+            <circle cx="15" cy="5" r="1" />
+            <circle cx="15" cy="12" r="1" />
+            <circle cx="15" cy="19" r="1" />
+          </svg>
+        </button>
+      )}
       <button
         className={cn(
           "absolute inset-0 w-full h-full bg-card-bg rounded-radius-lg",

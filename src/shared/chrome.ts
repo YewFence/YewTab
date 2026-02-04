@@ -104,7 +104,8 @@ const applyMockAction = (action: BookmarkAction): string | undefined => {
       const nextNode: BookmarkNode = {
         id: createdId,
         title: action.title,
-        url: action.url
+        url: action.url,
+        parentId: action.parentId
       };
       if (!parent.children) {
         parent.children = [];
@@ -149,7 +150,10 @@ const applyMockAction = (action: BookmarkAction): string | undefined => {
       if (!destination.children) {
         destination.children = [];
       }
-      destination.children.push(target);
+      target.parentId = action.parentId;
+      const insertIndex = typeof action.index === "number" ? action.index : destination.children.length;
+      const clampedIndex = Math.max(0, Math.min(insertIndex, destination.children.length));
+      destination.children.splice(clampedIndex, 0, target);
       return;
     }
     case "remove": {
@@ -194,7 +198,7 @@ const mockChrome = {
       addListener: (_listener: () => void) => undefined,
       removeListener: (_listener: () => void) => undefined
     },
-    sendMessage: async (message: { type?: string; payload?: BookmarkAction }): Promise<LoadBookmarksResponse | ApplyBookmarkChangeResponse> => {
+    sendMessage: async (message: { type?: string; payload?: unknown }): Promise<LoadBookmarksResponse | ApplyBookmarkChangeResponse> => {
       if (message?.type === MESSAGE_TYPES.LOAD_BOOKMARKS) {
         return {
           tree: mockTree,
@@ -203,13 +207,29 @@ const mockChrome = {
         };
       }
       if (message?.type === MESSAGE_TYPES.APPLY_BOOKMARK_CHANGE && message.payload) {
-        if (message.payload.type === "remove") {
-          const target = findNodeById(mockTree, message.payload.id);
+        const action = message.payload as BookmarkAction;
+        if (action.type === "remove") {
+          const target = findNodeById(mockTree, action.id);
           if (isFolderNode(target)) {
             return { success: false, error: "当前版本不支持删除文件夹" };
           }
         }
-        applyMockAction(message.payload);
+        applyMockAction(action);
+        updateSnapshot();
+        emitBookmarkChange();
+        emitRuntimeMessage({ type: MESSAGE_TYPES.BOOKMARKS_CHANGED });
+        return { success: true };
+      }
+      if (message?.type === MESSAGE_TYPES.REORDER_BOOKMARK_CHILDREN) {
+        const payload = message.payload as unknown as { parentId?: string; orderedIds?: string[] };
+        if (!payload?.parentId) {
+          return { success: false, error: "缺少 parentId" };
+        }
+
+        const ids = Array.isArray(payload.orderedIds) ? payload.orderedIds : [];
+        for (let index = 0; index < ids.length; index++) {
+          applyMockAction({ type: "move", id: ids[index], parentId: payload.parentId, index });
+        }
         updateSnapshot();
         emitBookmarkChange();
         emitRuntimeMessage({ type: MESSAGE_TYPES.BOOKMARKS_CHANGED });
@@ -226,6 +246,10 @@ const mockChrome = {
     get: async (id: string) => {
       const found = findNodeById(mockTree, id);
       return found ? [found] : [];
+    },
+    getChildren: async (id: string) => {
+      const found = findNodeById(mockTree, id);
+      return found?.children ?? [];
     },
     create: async (details: chrome.bookmarks.BookmarkCreateArg) => {
       const createdId = applyMockAction({

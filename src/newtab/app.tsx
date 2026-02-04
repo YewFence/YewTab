@@ -1,13 +1,14 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import type { MouseEvent } from "react";
+import type { MouseEvent, ReactNode } from "react";
 import { chromeApi } from "../shared/chrome";
 import { MESSAGE_TYPES } from "../shared/constants";
-import { applyBookmarkChange, requestBookmarks } from "../lib/messaging";
+import { applyBookmarkChange, reorderBookmarkChildren, requestBookmarks } from "../lib/messaging";
 import { readBookmarkSnapshot, readLayoutState, writeLayoutState } from "../lib/storage";
 import type { BookmarkAction, BookmarkNode, LayoutState } from "../shared/types";
 import BookmarkCard from "./components/bookmark-card";
 import BackCard from "./components/back-card";
 import FolderCard from "./components/folder-card";
+import SortableGrid from "./components/sortable-grid";
 import SearchBar from "./components/search-bar";
 import ContextMenu, { type ContextMenuItem } from "./components/context-menu";
 import EditBookmarkDialog from "./components/edit-bookmark-dialog";
@@ -52,6 +53,9 @@ export default function App() {
   const [tree, setTree] = useState<BookmarkNode[]>([]);
   const [layout, setLayout] = useState<LayoutState>(emptyLayout);
   const folderClickTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const [orderedIds, setOrderedIds] = useState<string[]>([]);
+  const reorderRequestIdRef = useRef(0);
 
   const [contextMenu, setContextMenu] = useState<
     | {
@@ -226,6 +230,11 @@ export default function App() {
   );
   const currentNodes = currentFolder?.children ?? rootNodes;
 
+  useEffect(() => {
+    setOrderedIds(currentNodes.map((n) => n.id));
+    reorderRequestIdRef.current += 1;
+  }, [activeFolderId, tree]);
+
   // Actions
   const handleFolderClick = (id: string) => {
     setExpandedIds(prev => {
@@ -346,66 +355,133 @@ export default function App() {
     ];
   }, [contextMenu, closeContextMenu]);
 
+  const parentIdForCurrentView = useMemo(() => {
+    if (activeFolderId) {
+      return activeFolderId;
+    }
+    return tree[0]?.id ?? "0";
+  }, [activeFolderId, tree]);
+
   // Grid Rendering Logic
   const renderGrid = () => {
-    const items = [];
+    const items: ReactNode[] = [];
 
-     if (activeFolderId) {
-       items.push(
-         <BackCard
-           key="__back__"
-           title={currentFolder ? getCardTitle(currentFolder) : "返回上级"}
-           subtitle="返回上级"
-           onClick={() => {
-             void handleBackToRoot();
-           }}
-         />
-       );
-     }
-
-     if (currentNodes.length === 0) {
-       items.push(
-         <div key="__empty__" className="col-span-full text-center py-12 text-muted-text">
-           <p>这里还没有书签，先在 Edge 里收藏一些吧。</p>
-         </div>
-       );
-       return items;
-     }
-
-    for (let i = 0; i < currentNodes.length; i++) {
-        const node = currentNodes[i];
-        const isExpanded = expandedIds.has(node.id);
-
-        if (node.children?.length) {
-            items.push(
-                <FolderCard
-                    key={node.id}
-                    id={node.id}
-                    title={getCardTitle(node)}
-                    count={node.children.length}
-                    isOpen={isExpanded}
-                    onToggle={() => handleFolderToggleGesture(node.id, isExpanded)}
-                    onDoubleClick={() => {
-                      clearFolderClickTimer();
-                      void handleSubFolderOpen(node.id);
-                    }}
-                    childrenNodes={node.children}
-                    onSubFolderClick={handleSubFolderOpen}
-                    onContextMenu={openContextMenu}
-                />
-            );
-        } else {
-            items.push(
-                <BookmarkCard
-                    key={node.id}
-                    id={node.id}
-                    title={getCardTitle(node)}
-                    url={node.url ?? ""}
-                    onContextMenu={openContextMenu}
-                />
-            );
-        }
+    if (activeFolderId) {
+      items.push(
+        <BackCard
+          key="__back__"
+          title={currentFolder ? getCardTitle(currentFolder) : "返回上级"}
+          subtitle="返回上级"
+          onClick={() => {
+            void handleBackToRoot();
+          }}
+        />
+      );
     }
+
+    if (currentNodes.length === 0) {
+      items.push(
+        <div key="__empty__" className="col-span-full text-center py-12 text-muted-text">
+          <p>这里还没有书签，先在 Edge 里收藏一些吧。</p>
+        </div>
+      );
+      return items;
+    }
+
+    const byId = new Map(currentNodes.map((n) => [n.id, n] as const));
+    const orderedNodes: BookmarkNode[] = [];
+    const seen = new Set<string>();
+
+    for (const id of orderedIds) {
+      const n = byId.get(id);
+      if (n) {
+        orderedNodes.push(n);
+        seen.add(id);
+      }
+    }
+    for (const n of currentNodes) {
+      if (!seen.has(n.id)) {
+        orderedNodes.push(n);
+      }
+    }
+
+    items.push(
+      <SortableGrid
+        key={`__sortable__:${activeFolderId ?? "root"}`}
+        ids={orderedNodes.map((n) => n.id)}
+        disabled={offline || !parentIdForCurrentView}
+        disabledIds={expandedIds}
+        onReorder={(nextIds) => {
+          const prev = orderedIds;
+          setOrderedIds(nextIds);
+          if (offline) {
+            setErrorMessage("离线快照模式下无法写回排序");
+            setOrderedIds(prev);
+            return;
+          }
+          if (!parentIdForCurrentView) {
+            setErrorMessage("当前视图无法确定父级节点，写回失败");
+            setOrderedIds(prev);
+            return;
+          }
+
+          const requestId = ++reorderRequestIdRef.current;
+          void reorderBookmarkChildren({ parentId: parentIdForCurrentView, orderedIds: nextIds }).then((resp) => {
+            if (reorderRequestIdRef.current !== requestId) {
+              return;
+            }
+            if (!resp.success) {
+              setErrorMessage(resp.error ?? "写回排序失败");
+              setOrderedIds(prev);
+            }
+          });
+        }}
+        render={({ id, dragHandle, setNodeRef, style, isDragging }) => {
+          const node = byId.get(id);
+          if (!node) {
+            return null;
+          }
+          const isExpanded = expandedIds.has(node.id);
+
+          if (node.children?.length) {
+            return (
+              <FolderCard
+                id={node.id}
+                title={getCardTitle(node)}
+                count={node.children.length}
+                isOpen={isExpanded}
+                onToggle={() => handleFolderToggleGesture(node.id, isExpanded)}
+                onDoubleClick={() => {
+                  clearFolderClickTimer();
+                  void handleSubFolderOpen(node.id);
+                }}
+                childrenNodes={node.children}
+                onSubFolderClick={handleSubFolderOpen}
+                onContextMenu={openContextMenu}
+                dragHandle={dragHandle}
+                sortableRef={setNodeRef as unknown as (node: HTMLDivElement | null) => void}
+                sortableStyle={style}
+                dndDragging={isDragging}
+              />
+            );
+          }
+
+          return (
+            <BookmarkCard
+              id={node.id}
+              title={getCardTitle(node)}
+              url={node.url ?? ""}
+              onContextMenu={openContextMenu}
+              dragHandle={dragHandle}
+              sortableRef={setNodeRef as unknown as (node: HTMLDivElement | null) => void}
+              sortableStyle={style}
+              dndDragging={isDragging}
+            />
+          );
+        }}
+      />
+    );
+
     return items;
   };
 
