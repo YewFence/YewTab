@@ -50,6 +50,11 @@ export type ApplyBookmarkChangeResponse = {
   error?: string;
 };
 
+export type ReorderBookmarkChildrenPayload = {
+  parentId: string;
+  orderedIds: string[];
+};
+
 export type SearchEngine = "bing" | "google" | "duckduckgo";
 
 export type SearchSettings = {

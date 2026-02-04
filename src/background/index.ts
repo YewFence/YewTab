@@ -1,9 +1,14 @@
 // 负责后台消息路由、书签监听与缓存同步。
-import { applyBookmarkAction, loadBookmarkTree, subscribeBookmarkChanges } from "../lib/bookmarks";
+import { applyBookmarkAction, loadBookmarkTree, reorderBookmarkChildren, subscribeBookmarkChanges } from "../lib/bookmarks";
 import { readBookmarkSnapshot, writeBookmarkSnapshot } from "../lib/storage";
 import { chromeApi } from "../shared/chrome";
 import { MESSAGE_TYPES } from "../shared/constants";
-import type { ApplyBookmarkChangeResponse, BookmarkAction, LoadBookmarksResponse } from "../shared/types";
+import type {
+  ApplyBookmarkChangeResponse,
+  BookmarkAction,
+  LoadBookmarksResponse,
+  ReorderBookmarkChildrenPayload
+} from "../shared/types";
 
 const isDev = import.meta.env.DEV;
 
@@ -68,6 +73,17 @@ const handleApplyChange = async (payload: BookmarkAction): Promise<ApplyBookmark
   }
 };
 
+const handleReorderChildren = async (payload: ReorderBookmarkChildrenPayload): Promise<ApplyBookmarkChangeResponse> => {
+  try {
+    await reorderBookmarkChildren(payload);
+    await refreshSnapshot();
+    broadcastBookmarksChanged();
+    return { success: true };
+  } catch (error) {
+    return { success: false, error: formatError(error) };
+  }
+};
+
 chromeApi.runtime.onMessage.addListener((message, _sender, sendResponse) => {
   if (!message || typeof message !== "object") {
     return false;
@@ -78,6 +94,10 @@ chromeApi.runtime.onMessage.addListener((message, _sender, sendResponse) => {
   }
   if (message.type === MESSAGE_TYPES.APPLY_BOOKMARK_CHANGE) {
     void handleApplyChange(message.payload as BookmarkAction).then(sendResponse);
+    return true;
+  }
+  if (message.type === MESSAGE_TYPES.REORDER_BOOKMARK_CHILDREN) {
+    void handleReorderChildren(message.payload as ReorderBookmarkChildrenPayload).then(sendResponse);
     return true;
   }
   return false;

@@ -2,6 +2,40 @@
 import { chromeApi } from "../../shared/chrome";
 import type { BookmarkAction, BookmarkNode } from "../../shared/types";
 
+export async function reorderBookmarkChildren(payload: { parentId: string; orderedIds: string[] }): Promise<void> {
+  const parentId = payload.parentId;
+  const orderedIds = payload.orderedIds ?? [];
+
+  const children = await chromeApi.bookmarks.getChildren(parentId);
+  const currentIds = children.map((c) => c.id);
+
+  if (currentIds.length <= 1) {
+    return;
+  }
+
+  const existing = new Set(currentIds);
+  const seen = new Set<string>();
+  const nextOrder: string[] = [];
+
+  for (const id of orderedIds) {
+    if (!existing.has(id) || seen.has(id)) {
+      continue;
+    }
+    seen.add(id);
+    nextOrder.push(id);
+  }
+  for (const id of currentIds) {
+    if (!seen.has(id)) {
+      nextOrder.push(id);
+    }
+  }
+
+  // 逐个设置 index，最终收敛到目标顺序。
+  for (let index = 0; index < nextOrder.length; index++) {
+    await chromeApi.bookmarks.move(nextOrder[index], { parentId, index });
+  }
+}
+
 export async function loadBookmarkTree(): Promise<BookmarkNode[]> {
   return chromeApi.bookmarks.getTree();
 }

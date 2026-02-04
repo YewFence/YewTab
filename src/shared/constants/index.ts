@@ -2,6 +2,7 @@
 export const MESSAGE_TYPES = {
   LOAD_BOOKMARKS: "load_bookmarks",
   APPLY_BOOKMARK_CHANGE: "apply_bookmark_change",
+  REORDER_BOOKMARK_CHILDREN: "reorder_bookmark_children",
   BOOKMARKS_CHANGED: "bookmarks_changed"
 } as const;
 
