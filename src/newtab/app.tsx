@@ -43,6 +43,7 @@ const getCardTitle = (node: BookmarkNode): string => {
 export default function App() {
   const [tree, setTree] = useState<BookmarkNode[]>([]);
   const [layout, setLayout] = useState<LayoutState>(emptyLayout);
+  const folderClickTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   
   // Navigation State
   const [activeFolderId, setActiveFolderId] = useState<string | null>(null);
@@ -77,6 +78,15 @@ export default function App() {
   useEffect(() => {
     void loadBookmarks();
   }, [loadBookmarks]);
+
+  useEffect(() => {
+    return () => {
+      if (folderClickTimerRef.current) {
+        clearTimeout(folderClickTimerRef.current);
+        folderClickTimerRef.current = null;
+      }
+    };
+  }, []);
 
   useEffect(() => {
     void readLayoutState().then((state) => {
@@ -152,8 +162,32 @@ export default function App() {
     });
   };
 
+  const clearFolderClickTimer = () => {
+    if (folderClickTimerRef.current) {
+      clearTimeout(folderClickTimerRef.current);
+      folderClickTimerRef.current = null;
+    }
+  };
+
+  const handleFolderToggleGesture = (id: string, isOpen: boolean) => {
+    // If already open, close immediately (collapse card shouldn't feel delayed).
+    if (isOpen) {
+      clearFolderClickTimer();
+      handleFolderClick(id);
+      return;
+    }
+
+    // Delay single-click expand slightly so double-click can be detected reliably.
+    clearFolderClickTimer();
+    folderClickTimerRef.current = setTimeout(() => {
+      folderClickTimerRef.current = null;
+      handleFolderClick(id);
+    }, 220);
+  };
+
   const handleSubFolderOpen = async (id: string) => {
     // Navigate into the subfolder (Standard Navigation)
+    clearFolderClickTimer();
     setExpandedIds(new Set());
     setActiveFolderId(id);
     const nextState = { ...layout, lastOpenFolder: id };
@@ -163,6 +197,7 @@ export default function App() {
   };
 
   const handleBackToRoot = async () => {
+    clearFolderClickTimer();
     setExpandedIds(new Set());
     setActiveFolderId(null);
     const nextState = { ...layout, lastOpenFolder: null };
@@ -221,8 +256,11 @@ export default function App() {
                     title={getCardTitle(node)}
                     count={node.children.length}
                     isOpen={isExpanded}
-                    onToggle={() => handleFolderClick(node.id)}
-                    onDoubleClick={() => handleSubFolderOpen(node.id)}
+                    onToggle={() => handleFolderToggleGesture(node.id, isExpanded)}
+                    onDoubleClick={() => {
+                      clearFolderClickTimer();
+                      void handleSubFolderOpen(node.id);
+                    }}
                     childrenNodes={node.children}
                     onSubFolderClick={handleSubFolderOpen}
                 />
