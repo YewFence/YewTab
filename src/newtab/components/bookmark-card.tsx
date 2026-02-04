@@ -1,13 +1,17 @@
+import type { MouseEvent } from "react";
 import { motion, useReducedMotion, type Transition } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { getFaviconUrl } from "../utils";
+import type { ContextMenuTarget } from "../types";
 
 type BookmarkCardProps = {
+  id: string;
   title: string;
   url: string;
+  onContextMenu?: (event: MouseEvent, target: ContextMenuTarget) => void;
 };
 
-export default function BookmarkCard({ title, url }: BookmarkCardProps) {
+export default function BookmarkCard({ id, title, url, onContextMenu }: BookmarkCardProps) {
   const reduceMotion = useReducedMotion();
   const layoutTransition: Transition = reduceMotion
     ? { duration: 0 }
@@ -32,6 +36,15 @@ export default function BookmarkCard({ title, url }: BookmarkCardProps) {
       className="relative aspect-[2.4/1] z-[1] group"
       layout
       transition={layoutTransition}
+      data-yew-context="bookmark"
+      data-yew-id={id}
+      data-yew-title={title}
+      data-yew-url={url}
+      onContextMenu={(e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        onContextMenu?.(e, { kind: "bookmark", id, title, url });
+      }}
     >
       <button
         className={cn(

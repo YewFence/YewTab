@@ -174,6 +174,11 @@ const applyMockAction = (action: BookmarkAction): string | undefined => {
   }
 };
 
+const isFolderNode = (node: BookmarkNode | null): boolean => {
+  // Chrome 书签：文件夹节点没有 url。
+  return !!node && !node.url;
+};
+
 const mockChrome = {
   runtime: {
     id: "dev-runtime",
@@ -198,6 +203,12 @@ const mockChrome = {
         };
       }
       if (message?.type === MESSAGE_TYPES.APPLY_BOOKMARK_CHANGE && message.payload) {
+        if (message.payload.type === "remove") {
+          const target = findNodeById(mockTree, message.payload.id);
+          if (isFolderNode(target)) {
+            return { success: false, error: "当前版本不支持删除文件夹" };
+          }
+        }
         applyMockAction(message.payload);
         updateSnapshot();
         emitBookmarkChange();
@@ -212,6 +223,10 @@ const mockChrome = {
   },
   bookmarks: {
     getTree: async () => mockTree,
+    get: async (id: string) => {
+      const found = findNodeById(mockTree, id);
+      return found ? [found] : [];
+    },
     create: async (details: chrome.bookmarks.BookmarkCreateArg) => {
       const createdId = applyMockAction({
         type: "create",
@@ -229,7 +244,7 @@ const mockChrome = {
         parentId: details.parentId ?? "0"
       };
     },
-    move: async (id: string, moveInfo: chrome.bookmarks.BookmarkMoveArg) => {
+    move: async (id: string, moveInfo: { parentId: string; index?: number }) => {
       applyMockAction({
         type: "move",
         id,
@@ -319,4 +334,4 @@ if (useMock) {
   updateSnapshot();
 }
 
-export const chromeApi: ChromeApi = (useMock ? (mockChrome as ChromeApi) : chrome);
+export const chromeApi: ChromeApi = useMock ? (mockChrome as unknown as ChromeApi) : chrome;

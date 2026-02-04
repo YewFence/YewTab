@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import type { MouseEvent } from "react";
 import { chromeApi } from "../shared/chrome";
 import { MESSAGE_TYPES } from "../shared/constants";
 import { applyBookmarkChange, requestBookmarks } from "../lib/messaging";
@@ -8,6 +9,10 @@ import BookmarkCard from "./components/bookmark-card";
 import BackCard from "./components/back-card";
 import FolderCard from "./components/folder-card";
 import SearchBar from "./components/search-bar";
+import ContextMenu, { type ContextMenuItem } from "./components/context-menu";
+import EditBookmarkDialog from "./components/edit-bookmark-dialog";
+import ConfirmDialog from "./components/confirm-dialog";
+import type { ContextMenuTarget } from "./types";
 
 const emptyLayout: LayoutState = {
   pinnedIds: [],
@@ -44,6 +49,21 @@ export default function App() {
   const [tree, setTree] = useState<BookmarkNode[]>([]);
   const [layout, setLayout] = useState<LayoutState>(emptyLayout);
   const folderClickTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const [contextMenu, setContextMenu] = useState<
+    | {
+        x: number;
+        y: number;
+        target: ContextMenuTarget;
+      }
+    | null
+  >(null);
+  const [editTarget, setEditTarget] = useState<ContextMenuTarget | null>(null);
+  const [editServerError, setEditServerError] = useState<string | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<Extract<ContextMenuTarget, { kind: "bookmark" }> | null>(null);
+  const [deleteServerError, setDeleteServerError] = useState<string | null>(null);
+
+  const suppressReactContextMenuRef = useRef(0);
   
   // Navigation State
   const [activeFolderId, setActiveFolderId] = useState<string | null>(null);
@@ -55,6 +75,59 @@ export default function App() {
 
   const [offline, setOffline] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
+  const openContextMenu = useCallback((event: MouseEvent, target: ContextMenuTarget) => {
+    if (Date.now() - suppressReactContextMenuRef.current < 50) {
+      return;
+    }
+    setContextMenu({ x: event.clientX, y: event.clientY, target });
+  }, []);
+
+  const closeContextMenu = useCallback(() => setContextMenu(null), []);
+
+  // 某些浏览器/扩展页面环境下，React 的 onContextMenu preventDefault 可能不生效。
+  // 这里用原生捕获阶段统一兜底拦截，并根据卡片上的 data 属性打开自定义菜单。
+  useEffect(() => {
+    const handler = (event: globalThis.MouseEvent) => {
+      const targetEl = event.target as HTMLElement | null;
+      if (!targetEl) {
+        return;
+      }
+      const el = targetEl.closest("[data-yew-context]") as HTMLElement | null;
+      if (!el) {
+        return;
+      }
+
+      const kind = el.dataset.yewContext;
+      const id = el.dataset.yewId;
+      const title = el.dataset.yewTitle ?? "";
+      if (!kind || !id) {
+        return;
+      }
+
+      let ctxTarget: ContextMenuTarget | null = null;
+      if (kind === "folder") {
+        ctxTarget = { kind: "folder", id, title };
+      } else if (kind === "bookmark") {
+        const url = el.dataset.yewUrl ?? "";
+        ctxTarget = { kind: "bookmark", id, title, url };
+      }
+      if (!ctxTarget) {
+        return;
+      }
+
+      event.preventDefault();
+      event.stopPropagation();
+      // 尽量阻断后续监听（包括 React 的 delegated listener）。
+      (event as unknown as { stopImmediatePropagation?: () => void }).stopImmediatePropagation?.();
+      suppressReactContextMenuRef.current = Date.now();
+
+      setContextMenu({ x: event.clientX, y: event.clientY, target: ctxTarget });
+    };
+
+    window.addEventListener("contextmenu", handler, { capture: true });
+    return () => window.removeEventListener("contextmenu", handler, { capture: true } as AddEventListenerOptions);
+  }, []);
 
   const loadBookmarks = useCallback(async () => {
     try {
@@ -219,6 +292,56 @@ export default function App() {
     }
   };
 
+  const contextMenuItems: ContextMenuItem[] = useMemo(() => {
+    if (!contextMenu) {
+      return [];
+    }
+
+    const t = contextMenu.target;
+    if (t.kind === "folder") {
+      return [
+        {
+          key: "edit",
+          label: "重命名...",
+          onSelect: () => {
+            setEditServerError(null);
+            setEditTarget(t);
+            closeContextMenu();
+          }
+        },
+        {
+          key: "delete",
+          label: "删除文件夹（暂不支持）",
+          disabled: true,
+          danger: true,
+          onSelect: () => undefined
+        }
+      ];
+    }
+
+    return [
+      {
+        key: "edit",
+        label: "编辑...",
+        onSelect: () => {
+          setEditServerError(null);
+          setEditTarget(t);
+          closeContextMenu();
+        }
+      },
+      {
+        key: "delete",
+        label: "删除...",
+        danger: true,
+        onSelect: () => {
+          setDeleteServerError(null);
+          setDeleteTarget(t);
+          closeContextMenu();
+        }
+      }
+    ];
+  }, [contextMenu, closeContextMenu]);
+
   // Grid Rendering Logic
   const renderGrid = () => {
     const items = [];
@@ -253,6 +376,7 @@ export default function App() {
             items.push(
                 <FolderCard
                     key={node.id}
+                    id={node.id}
                     title={getCardTitle(node)}
                     count={node.children.length}
                     isOpen={isExpanded}
@@ -263,14 +387,17 @@ export default function App() {
                     }}
                     childrenNodes={node.children}
                     onSubFolderClick={handleSubFolderOpen}
+                    onContextMenu={openContextMenu}
                 />
             );
         } else {
             items.push(
                 <BookmarkCard
                     key={node.id}
+                    id={node.id}
                     title={getCardTitle(node)}
                     url={node.url ?? ""}
+                    onContextMenu={openContextMenu}
                 />
             );
         }
@@ -315,6 +442,78 @@ export default function App() {
       >
         {renderGrid()}
       </section>
+
+      <ContextMenu
+        open={!!contextMenu}
+        x={contextMenu?.x ?? 0}
+        y={contextMenu?.y ?? 0}
+        items={contextMenuItems}
+        onClose={closeContextMenu}
+      />
+
+      <EditBookmarkDialog
+        open={!!editTarget}
+        target={editTarget}
+        serverError={editServerError}
+        onClose={() => {
+          setEditTarget(null);
+          setEditServerError(null);
+        }}
+        onSubmit={async (payload) => {
+          if (!editTarget) {
+            return false;
+          }
+
+          const action: BookmarkAction =
+            editTarget.kind === "folder"
+              ? {
+                  type: "update",
+                  id: editTarget.id,
+                  title: payload.title
+                }
+              : {
+                  type: "update",
+                  id: editTarget.id,
+                  title: payload.title,
+                  url: payload.url
+                };
+
+          const response = await applyBookmarkChange(action);
+          if (!response.success) {
+            const msg = response.error ?? "写回书签失败";
+            setEditServerError(msg);
+            setErrorMessage(msg);
+            return false;
+          }
+          return true;
+        }}
+      />
+
+      <ConfirmDialog
+        open={!!deleteTarget}
+        title="删除书签？"
+        description={deleteTarget ? `即将删除“${deleteTarget.title || "未命名"}”。此操作无法撤销。` : undefined}
+        error={deleteServerError}
+        confirmText="删除"
+        danger
+        onClose={() => {
+          setDeleteTarget(null);
+          setDeleteServerError(null);
+        }}
+        onConfirm={async () => {
+          if (!deleteTarget) {
+            return false;
+          }
+          const response = await applyBookmarkChange({ type: "remove", id: deleteTarget.id });
+          if (!response.success) {
+            const msg = response.error ?? "删除失败";
+            setDeleteServerError(msg);
+            setErrorMessage(msg);
+            return false;
+          }
+          return true;
+        }}
+      />
     </div>
   );
 }
