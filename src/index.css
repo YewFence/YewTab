@@ -1,0 +1,247 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+
+/* ===== 第一步：CSS 变量定义（根级别） ===== */
+:root {
+  /* shadcn/ui 标准变量 */
+  --background: hsl(0 0% 100%);
+  --foreground: hsl(222.2 84% 4.9%);
+  --card: hsl(0 0% 100%);
+  --card-foreground: hsl(222.2 84% 4.9%);
+  --popover: hsl(0 0% 100%);
+  --popover-foreground: hsl(222.2 84% 4.9%);
+  --primary: hsl(221.2 83.2% 53.3%);
+  --primary-foreground: hsl(210 40% 98%);
+  --secondary: hsl(210 40% 96.1%);
+  --secondary-foreground: hsl(222.2 47.4% 11.2%);
+  --muted: hsl(210 40% 96.1%);
+  --muted-foreground: hsl(215.4 16.3% 46.9%);
+  --accent: hsl(210 40% 96.1%);
+  --accent-foreground: hsl(222.2 47.4% 11.2%);
+  --destructive: hsl(0 84.2% 60.2%);
+  --destructive-foreground: hsl(210 40% 98%);
+  --border: hsl(214.3 31.8% 91.4%);
+  --input: hsl(214.3 31.8% 91.4%);
+  --ring: hsl(221.2 83.2% 53.3%);
+  --radius: 0.5rem;
+
+  /* 项目自定义变量（iOS 风格） */
+  --ink: #1c1a24;
+  --muted-text: #5b5a6a;
+  --accent-orange: #ff7a59;
+  --accent-blue: #2f80ed;
+  --card-bg: #ffffff;
+  --shadow-card: 0 4px 12px rgba(0, 0, 0, 0.05);
+  --shadow-card-hover: 0 12px 24px rgba(0, 0, 0, 0.12);
+  --glass: rgba(255, 255, 255, 0.8);
+  --glass-strong: rgba(255, 255, 255, 0.95);
+  --ios-bg: #f2f2f7;
+  --radius-lg: 20px;
+  --radius-md: 14px;
+  --grid-gap: 24px;
+  --card-min-width: 220px;
+
+  /* 玻璃态边框 */
+  --border-glass: rgba(0, 0, 0, 0.05);
+  --glass-subtle: rgba(255, 255, 255, 0.4);
+
+  /* 嵌入式/凹槽背景 (用于 Checkbox/Radio) */
+  --bg-inset: rgba(0, 0, 0, 0.05);
+  --bg-inset-hover: rgba(0, 0, 0, 0.10);
+  --border-inset: rgba(0, 0, 0, 0.20);
+}
+
+/* 暗色模式 */
+.dark {
+  --background: hsl(224 71.4% 4.1%); /* #020617 (Slate 950) 更深邃的背景 */
+  --foreground: hsl(210 40% 98%);
+  --card: hsl(222.2 47.4% 11.2%); /* #0f172a (Slate 900) 卡片保持深蓝，与背景拉开层次 */
+  --card-foreground: hsl(210 40% 98%);
+  --popover: hsl(224 71.4% 4.1%);
+  --popover-foreground: hsl(210 40% 98%);
+  --primary: hsl(217.2 91.2% 59.8%);
+  --primary-foreground: hsl(222.2 47.4% 11.2%);
+  --secondary: hsl(217.2 32.6% 17.5%);
+  --secondary-foreground: hsl(210 40% 98%);
+  --muted: hsl(217.2 32.6% 17.5%);
+  --muted-foreground: hsl(215 20.2% 65.1%);
+  --accent: hsl(217.2 32.6% 17.5%);
+  --accent-foreground: hsl(210 40% 98%);
+  --destructive: hsl(0 62.8% 30.6%);
+  --destructive-foreground: hsl(210 40% 98%);
+  --border: hsl(217.2 32.6% 22%); /* 稍微提亮边框，增加轮廓感 */
+  --input: hsl(217.2 32.6% 17.5%);
+  --ring: hsl(224.3 76.3% 48%);
+
+  /* 项目自定义暗色变量 */
+  --ink: #f8fafc; /* Slate 50 - 更亮白的文字 */
+  --muted-text: #94a3b8; /* Slate 400 */
+  --card-bg: #0f172a; /* Slate 900 - 卡片比背景稍亮 */
+  --glass: rgba(15, 23, 42, 0.75); /* 深色玻璃，增加不透明度以提升可读性 */
+  --glass-strong: rgba(15, 23, 42, 0.95);
+  --glass-subtle: rgba(15, 23, 42, 0.4);
+  --ios-bg: #020617; /* Slate 950 - 极夜背景 */
+  
+  --border-glass: rgba(255, 255, 255, 0.08); /* 增加边框亮度，勾勒轮廓 */
+
+  --bg-inset: rgba(0, 0, 0, 0.20); /* 更深的凹槽 */
+  --bg-inset-hover: rgba(0, 0, 0, 0.40);
+  --border-inset: rgba(255, 255, 255, 0.10);
+}
+
+/* ===== 第二步：@theme inline 映射 ===== */
+@theme inline {
+  /* shadcn/ui 标准映射 */
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+
+  /* 项目自定义映射 */
+  --color-ink: var(--ink);
+  --color-muted-text: var(--muted-text);
+  --color-accent-orange: var(--accent-orange);
+  --color-accent-blue: var(--accent-blue);
+  --color-card-bg: var(--card-bg);
+  --color-glass: var(--glass);
+  --color-glass-strong: var(--glass-strong);
+  --color-glass-subtle: var(--glass-subtle);
+  --color-ios-bg: var(--ios-bg);
+
+  --color-border-glass: var(--border-glass);
+
+  --color-bg-inset: var(--bg-inset);
+  --color-bg-inset-hover: var(--bg-inset-hover);
+  --color-border-inset: var(--border-inset);
+
+  --shadow-card: var(--shadow-card);
+  --shadow-card-hover: var(--shadow-card-hover);
+
+  --radius-lg: var(--radius-lg);
+  --radius-md: var(--radius-md);
+  --radius-sm: calc(var(--radius) - 4px);
+}
+
+/* ===== 第三步：基础样式 ===== */
+@layer base {
+  * {
+    border-color: var(--border);
+    box-sizing: border-box;
+  }
+
+  body {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI",
+                 Roboto, Helvetica, Arial, sans-serif;
+    color: var(--ink);
+    background: var(--ios-bg);
+    min-height: 100vh;
+    overflow-y: scroll;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  #root {
+    position: relative;
+    z-index: 1;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+}
+
+/* ===== 特殊样式（无法用工具类实现） ===== */
+
+/* 抽象背景形状 */
+body::before,
+body::after {
+  content: "";
+  position: fixed;
+  width: 60vw;
+  height: 60vw;
+  border-radius: 50%;
+  filter: blur(80px);
+  z-index: 0;
+  pointer-events: none;
+  opacity: 0.6;
+}
+
+body::before {
+  top: -20%;
+  left: -10%;
+  background: radial-gradient(circle, #a1c4fd 0%, transparent 70%);
+}
+
+body::after {
+  bottom: -20%;
+  right: -10%;
+  background: radial-gradient(circle, #c2e9fb 0%, transparent 70%);
+}
+
+.dark body::before {
+  background: radial-gradient(circle, #312e81 0%, transparent 70%); /* Indigo 900 */
+}
+
+.dark body::after {
+  background: radial-gradient(circle, #115e59 0%, transparent 70%); /* Teal 800 */
+}
+
+/* ===== 自定义背景图片支持 ===== */
+:root {
+  --custom-bg-image: none;
+  --custom-bg-size: cover;
+  --custom-bg-repeat: no-repeat;
+  --custom-bg-overlay: 30;
+}
+
+/* 当启用自定义背景时，隐藏默认渐变 */
+.custom-bg-active body::before,
+.custom-bg-active body::after {
+  display: none !important;
+}
+
+/* 自定义背景容器 */
+.custom-bg-active body {
+  position: relative;
+}
+
+/* 自定义背景图片层 */
+.custom-bg-active::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  background-image: var(--custom-bg-image);
+  background-size: var(--custom-bg-size);
+  background-position: center;
+  background-repeat: var(--custom-bg-repeat);
+  pointer-events: none;
+}
+
+/* 背景叠加层（确保内容可读性） */
+.custom-bg-active::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  background: rgba(255, 255, 255, calc(var(--custom-bg-overlay) / 100));
+  pointer-events: none;
+}
+
+.dark.custom-bg-active::after {
+  background: rgba(0, 0, 0, calc(var(--custom-bg-overlay) / 100));
+}

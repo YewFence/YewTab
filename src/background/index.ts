@@ -1,8 +1,14 @@
 // 负责后台消息路由、书签监听与缓存同步。
-import { applyBookmarkAction, loadBookmarkTree, subscribeBookmarkChanges } from "../lib/bookmarks";
+import { applyBookmarkAction, loadBookmarkTree, reorderBookmarkChildren, subscribeBookmarkChanges } from "../lib/bookmarks";
 import { readBookmarkSnapshot, writeBookmarkSnapshot } from "../lib/storage";
+import { chromeApi } from "../shared/chrome";
 import { MESSAGE_TYPES } from "../shared/constants";
-import type { ApplyBookmarkChangeResponse, BookmarkAction, LoadBookmarksResponse } from "../shared/types";
+import type {
+  ApplyBookmarkChangeResponse,
+  BookmarkAction,
+  LoadBookmarksResponse,
+  ReorderBookmarkChildrenPayload
+} from "../shared/types";
 
 const isDev = import.meta.env.DEV;
 
@@ -20,7 +26,7 @@ const formatError = (error: unknown) => {
 };
 
 const broadcastBookmarksChanged = () => {
-  chrome.runtime.sendMessage({ type: MESSAGE_TYPES.BOOKMARKS_CHANGED });
+  chromeApi.runtime.sendMessage({ type: MESSAGE_TYPES.BOOKMARKS_CHANGED });
 };
 
 const refreshSnapshot = async (): Promise<void> => {
@@ -67,7 +73,18 @@ const handleApplyChange = async (payload: BookmarkAction): Promise<ApplyBookmark
   }
 };
 
-chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
+const handleReorderChildren = async (payload: ReorderBookmarkChildrenPayload): Promise<ApplyBookmarkChangeResponse> => {
+  try {
+    await reorderBookmarkChildren(payload);
+    await refreshSnapshot();
+    broadcastBookmarksChanged();
+    return { success: true };
+  } catch (error) {
+    return { success: false, error: formatError(error) };
+  }
+};
+
+chromeApi.runtime.onMessage.addListener((message, _sender, sendResponse) => {
   if (!message || typeof message !== "object") {
     return false;
   }
@@ -79,10 +96,14 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
     void handleApplyChange(message.payload as BookmarkAction).then(sendResponse);
     return true;
   }
+  if (message.type === MESSAGE_TYPES.REORDER_BOOKMARK_CHILDREN) {
+    void handleReorderChildren(message.payload as ReorderBookmarkChildrenPayload).then(sendResponse);
+    return true;
+  }
   return false;
 });
 
-chrome.runtime.onInstalled.addListener(() => {
+chromeApi.runtime.onInstalled.addListener(() => {
   void refreshSnapshot().catch((error) => logDebug("初始化缓存失败:", error));
 });
 

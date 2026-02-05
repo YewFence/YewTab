@@ -36,6 +36,11 @@ export type BookmarkSnapshot = {
 export type LayoutState = {
   pinnedIds: string[];
   lastOpenFolder: string | null;
+  // 打开新标签页时始终跳转到该文件夹（为 null 时不启用）
+  startupFolderId: string | null;
+  // 文件夹展开状态持久化
+  keepFolderExpansion?: boolean;
+  expandedFolderIds?: string[];
 };
 
 export type LoadBookmarksResponse = {
@@ -48,4 +53,33 @@ export type LoadBookmarksResponse = {
 export type ApplyBookmarkChangeResponse = {
   success: boolean;
   error?: string;
+};
+
+export type ReorderBookmarkChildrenPayload = {
+  parentId: string;
+  orderedIds: string[];
+};
+
+export type SearchEngine = "bing" | "google" | "duckduckgo";
+
+export type SearchSettings = {
+  defaultEngine: SearchEngine;
+};
+
+// 背景设置相关类型
+export type BackgroundType = "gradient" | "image";
+export type ImageSource = "upload" | "url";
+export type ImagePosition = "cover" | "contain" | "center" | "tile";
+
+export type ThemeBackground = {
+  type: BackgroundType;
+  imageSource?: ImageSource;
+  imageData?: string;  // Base64 或 URL
+  imagePosition?: ImagePosition;
+  overlayOpacity?: number;  // 0-100，叠加层透明度
+};
+
+export type BackgroundSettings = {
+  light: ThemeBackground;
+  dark: ThemeBackground;
 };
