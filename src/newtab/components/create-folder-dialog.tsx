@@ -66,28 +66,28 @@ export default function CreateFolderDialog({ open, serverError, onClose, onSubmi
         }}
       />
 
-      <div
-        className={cn(
-          "relative w-full max-w-[520px]",
-          "rounded-[18px] border border-white/50",
-          "bg-glass-strong/95 backdrop-blur-[14px]",
-          "shadow-[0_20px_60px_rgba(0,0,0,0.22)]",
-          "p-5"
-        )}
-      >
-        <div className="flex items-start justify-between gap-4">
-          <div>
-            <div className="text-[15px] font-bold text-ink">{dialogTitle}</div>
-            <div className="mt-1 text-xs text-muted-text">确认后会在当前文件夹下创建</div>
-          </div>
-          <button
-            type="button"
-            className={cn(
-              "h-9 w-9 rounded-[12px] grid place-items-center",
-              "bg-black/5 hover:bg-black/10",
-              "transition-colors",
-              pending && "opacity-60 cursor-not-allowed"
-            )}
+        <div
+          className={cn(
+            "relative w-full max-w-[520px]",
+            "rounded-[18px] border border-border-glass",
+            "bg-glass-strong/95 backdrop-blur-[14px]",
+            "shadow-[0_20px_60px_rgba(0,0,0,0.22)]",
+            "p-5"
+          )}
+        >
+          <div className="flex items-start justify-between gap-4">
+            <div>
+              <div className="text-[15px] font-bold text-ink">{dialogTitle}</div>
+              <div className="mt-1 text-xs text-muted-text">确认后会在当前文件夹下创建</div>
+            </div>
+            <button
+              type="button"
+              className={cn(
+                "h-9 w-9 rounded-[12px] grid place-items-center",
+                "bg-bg-inset hover:bg-bg-inset-hover",
+                "transition-colors",
+                pending && "opacity-60 cursor-not-allowed"
+              )}
             disabled={pending}
             onClick={onClose}
             aria-label="关闭"
@@ -138,8 +138,8 @@ export default function CreateFolderDialog({ open, serverError, onClose, onSubmi
               onChange={(e) => setTitle(e.target.value)}
               className={cn(
                 "w-full rounded-[12px] px-3 py-2",
-                "bg-white/70 dark:bg-black/20",
-                "border border-white/40",
+                "bg-glass",
+                "border border-border-glass",
                 "text-ink",
                 "outline-none",
                 "focus:ring-2 focus:ring-ring/30 focus:border-transparent",
@@ -161,7 +161,7 @@ export default function CreateFolderDialog({ open, serverError, onClose, onSubmi
               type="button"
               className={cn(
                 "px-4 py-2 rounded-[12px] font-semibold",
-                "bg-black/5 hover:bg-black/10",
+                "bg-bg-inset hover:bg-bg-inset-hover",
                 "text-ink",
                 "transition-colors",
                 pending && "opacity-60 cursor-not-allowed"

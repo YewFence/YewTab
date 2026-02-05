@@ -10,8 +10,8 @@ export type SettingsSectionProps = {
 
 export default function SettingsSection({ title, description, children, className }: SettingsSectionProps) {
   return (
-    <section className={cn("rounded-[18px] bg-white/80 dark:bg-black/40 border border-black/5 dark:border-white/10", "backdrop-blur-[24px]", className)}>
-      <div className="px-5 py-4 border-b border-black/5 dark:border-white/10">
+    <section className={cn("rounded-[18px] bg-glass border border-border-glass", "backdrop-blur-[24px]", className)}>
+      <div className="px-5 py-4 border-b border-border-glass">
         <div className="text-base font-bold tracking-tight">{title}</div>
         {description ? <div className="text-sm text-muted-text mt-1">{description}</div> : null}
       </div>

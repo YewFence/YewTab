@@ -105,7 +105,7 @@ export default function GeneralTab() {
                 "border transition-all duration-200",
                 key === engine
                   ? "bg-primary/5 border-primary/30 shadow-[0_4px_12px_rgba(47,128,237,0.1)]"
-                  : "bg-white/40 border-black/5 dark:border-white/10 hover:bg-white/60"
+                  : "bg-glass-subtle border-border-glass hover:bg-glass"
               )}
             >
               <div className="min-w-0">
@@ -135,7 +135,7 @@ export default function GeneralTab() {
                   "max-w-[420px] truncate",
                   "text-sm font-semibold",
                   "px-3 py-2 rounded-[14px]",
-                  "bg-white/55 border border-black/5 dark:border-white/10",
+                  "bg-glass-subtle border border-border-glass",
                   startupFolderId ? "text-ink" : "text-muted-text"
                 )}
                 title={startupFolderLabel}

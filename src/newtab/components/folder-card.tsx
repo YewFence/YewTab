@@ -76,11 +76,11 @@ export default function FolderCard({
     >
       <div
         className={cn(
-          "flex flex-col p-0 bg-white/50 backdrop-blur-[10px]",
-          "border border-white/40 rounded-radius-lg shadow-card overflow-hidden",
+          "flex flex-col p-0 bg-glass-subtle backdrop-blur-[10px]",
+          "border border-border-glass rounded-radius-lg shadow-card overflow-hidden",
           "transition-[background-color,box-shadow,border-color] duration-200",
           isOpen
-            ? "relative inset-auto h-auto bg-white/85 border-accent-blue shadow-[0_0_0_2px_rgba(47,128,237,0.2)]"
+            ? "relative inset-auto h-auto bg-glass-strong border-accent-blue shadow-[0_0_0_2px_rgba(47,128,237,0.2)]"
             : "h-full hover:shadow-card-hover hover:bg-glass-strong"
         )}
       >
@@ -98,7 +98,7 @@ export default function FolderCard({
             onDoubleClick={onDoubleClick}
             title={title}
           >
-            <div className="w-11 h-11 rounded-[10px] grid place-items-center bg-[#e1e1e6] shrink-0">
+            <div className="w-11 h-11 rounded-[10px] grid place-items-center bg-secondary shrink-0">
               <svg
                 xmlns="http://www.w3.org/2000/svg"
                 width="24"
