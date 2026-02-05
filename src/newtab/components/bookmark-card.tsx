@@ -109,7 +109,7 @@ export default function BookmarkCard({
         <img
           src={getFaviconUrl(url)}
           alt=""
-          className="w-11 h-11 rounded-[10px] object-contain bg-muted p-1 shrink-0"
+          className="w-8 h-8 rounded-[8px] object-contain bg-muted p-1 shrink-0"
           onError={(e) => {
             (e.target as HTMLImageElement).src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23999' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='12' r='10'/%3E%3C/svg%3E";
           }}
