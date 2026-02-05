@@ -6,7 +6,7 @@ export const emptyLayout: LayoutState = {
   pinnedIds: [],
   lastOpenFolder: null,
   startupFolderId: null,
-  keepFolderExpansion: false,
+  keepFolderExpansion: true,
   expandedFolderIds: []
 };
 

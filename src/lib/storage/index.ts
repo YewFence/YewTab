@@ -7,7 +7,7 @@ const defaultLayoutState: LayoutState = {
   pinnedIds: [],
   lastOpenFolder: null,
   startupFolderId: null,
-  keepFolderExpansion: false,
+  keepFolderExpansion: true,
   expandedFolderIds: []
 };
 
