@@ -8,7 +8,8 @@ const defaultLayoutState: LayoutState = {
   lastOpenFolder: null,
   startupFolderId: null,
   keepFolderExpansion: true,
-  expandedFolderIds: []
+  expandedFolderIds: [],
+  openInNewTab: false
 };
 
 export async function readBookmarkSnapshot(): Promise<BookmarkSnapshot | null> {
