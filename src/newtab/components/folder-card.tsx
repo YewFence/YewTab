@@ -184,21 +184,27 @@ export default function FolderCard({
               </button>
             </div>
 
-            {childrenNodes.map((node) =>
-              node.children?.length ? (
-                <FolderCard
-                  key={node.id}
-                  id={node.id}
-                  title={node.title || "未命名"}
-                  count={node.children.length}
-                  isOpen={false}
-                  onToggle={() => onSubFolderClick?.(node.id)}
-                  onDoubleClick={() => onSubFolderClick?.(node.id)}
-                  childrenNodes={node.children}
-                  onSubFolderClick={onSubFolderClick}
-                  onContextMenu={onContextMenu}
-                />
-              ) : (
+            {childrenNodes.map((node) => {
+              // Empty folder has no children, so classify by URL.
+              if (!node.url) {
+                const subChildren = node.children ?? [];
+                return (
+                  <FolderCard
+                    key={node.id}
+                    id={node.id}
+                    title={node.title || "未命名"}
+                    count={subChildren.length}
+                    isOpen={false}
+                    onToggle={() => onSubFolderClick?.(node.id)}
+                    onDoubleClick={() => onSubFolderClick?.(node.id)}
+                    childrenNodes={subChildren}
+                    onSubFolderClick={onSubFolderClick}
+                    onContextMenu={onContextMenu}
+                  />
+                );
+              }
+
+              return (
                 <BookmarkCard
                   key={node.id}
                   id={node.id}
@@ -206,8 +212,8 @@ export default function FolderCard({
                   url={node.url ?? ""}
                   onContextMenu={onContextMenu}
                 />
-              )
-            )}
+              );
+            })}
           </div>
         )}
       </div>
