@@ -10,6 +10,7 @@ type BookmarkCardProps = {
   id: string;
   title: string;
   url: string;
+  openInNewTab?: boolean;
   disableOpen?: boolean;
   onContextMenu?: (event: MouseEvent, target: ContextMenuTarget) => void;
   dragHandle?: SortableDragHandle | null;
@@ -22,6 +23,7 @@ export default function BookmarkCard({
   id,
   title,
   url,
+  openInNewTab,
   disableOpen = false,
   onContextMenu,
   dragHandle,
@@ -47,7 +49,11 @@ export default function BookmarkCard({
       return;
     }
     if (url) {
-      window.open(url, "_blank", "noopener,noreferrer");
+      if (openInNewTab) {
+        window.open(url, "_blank", "noopener,noreferrer");
+      } else {
+        window.location.href = url;
+      }
     }
   };
 

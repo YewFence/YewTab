@@ -41,6 +41,8 @@ export type LayoutState = {
   // 文件夹展开状态持久化
   keepFolderExpansion?: boolean;
   expandedFolderIds?: string[];
+  // 打开方式：是否在新标签页打开（默认 false）
+  openInNewTab?: boolean;
 };
 
 export type LoadBookmarksResponse = {
