@@ -19,6 +19,7 @@ import type { ContextMenuTarget } from "./types";
 import SettingsModal from "@/newtab/settings";
 import { IconEdit, IconSettings } from "@/newtab/settings/icons";
 import { Button } from "@/components/ui/button";
+import { useBackground } from "@/hooks/use-background";
 
 const emptyLayout: LayoutState = {
   pinnedIds: [],
@@ -67,6 +68,9 @@ const findPathInTree = (node: BookmarkNode, targetId: string): BookmarkNode[] | 
 };
 
 export default function App() {
+  // 初始化背景设置
+  useBackground();
+
   const [tree, setTree] = useState<BookmarkNode[]>([]);
   const [layout, setLayout] = useState<LayoutState>(emptyLayout);
   const folderClickTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);

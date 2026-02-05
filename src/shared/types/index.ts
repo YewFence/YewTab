@@ -62,3 +62,21 @@ export type SearchEngine = "bing" | "google" | "duckduckgo";
 export type SearchSettings = {
   defaultEngine: SearchEngine;
 };
+
+// 背景设置相关类型
+export type BackgroundType = "gradient" | "image";
+export type ImageSource = "upload" | "url";
+export type ImagePosition = "cover" | "contain" | "center" | "tile";
+
+export type ThemeBackground = {
+  type: BackgroundType;
+  imageSource?: ImageSource;
+  imageData?: string;  // Base64 或 URL
+  imagePosition?: ImagePosition;
+  overlayOpacity?: number;  // 0-100，叠加层透明度
+};
+
+export type BackgroundSettings = {
+  light: ThemeBackground;
+  dark: ThemeBackground;
+};

@@ -9,7 +9,8 @@ export const MESSAGE_TYPES = {
 export const STORAGE_KEYS = {
   SNAPSHOT: "bookmarks_snapshot",
   LAYOUT: "layout_state",
-  SEARCH_SETTINGS: "search_settings"
+  SEARCH_SETTINGS: "search_settings",
+  BACKGROUND_SETTINGS: "background_settings"
 } as const;
 
 export const SNAPSHOT_VERSION = 1;

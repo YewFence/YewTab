@@ -1,6 +1,7 @@
 import { useMemo } from "react";
 import SettingsSection from "@/newtab/settings/components/section";
 import SettingsRow from "@/newtab/settings/components/row";
+import BackgroundSection from "@/newtab/settings/components/background-section";
 import { Radio } from "@/components/ui/radio";
 import { useTheme } from "@/components/theme-provider";
 import { cn } from "@/lib/utils";
@@ -51,11 +52,7 @@ export default function AppearanceTab() {
         />
       </SettingsSection>
 
-      <SettingsSection title="占位设置" description="这些先把 UI 框架搭起来，后端/存储接口写好后再接。">
-        <div className="text-sm text-muted-text">
-          这里会放：卡片密度、背景样式、快捷操作、书签同步策略……现在先留个坑位，UI 结构已经稳定可扩展。
-        </div>
-      </SettingsSection>
+      <BackgroundSection />
     </div>
   );
 }
