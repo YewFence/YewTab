@@ -142,7 +142,7 @@ export default function FolderCard({
                 }}
                 onDoubleClick={(e) => {
                   e.stopPropagation();
-                  onToggle();
+                  onDoubleClick();
                 }}
                 title="收起"
               >

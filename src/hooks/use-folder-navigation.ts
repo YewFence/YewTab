@@ -127,12 +127,6 @@ export function useFolderNavigation(
   }, [layout.keepFolderExpansion, setLayout]);
 
   const handleFolderToggleGesture = useCallback((id: string, isOpen: boolean) => {
-    if (isOpen) {
-      clearFolderClickTimer();
-      handleFolderClick(id);
-      return;
-    }
-
     clearFolderClickTimer();
     folderClickTimerRef.current = setTimeout(() => {
       folderClickTimerRef.current = null;
