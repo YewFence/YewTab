@@ -30,9 +30,12 @@ export default function App() {
 
   // 导航状态
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [activeFolderId, setActiveFolderId] = useState<string | null>(null);
+
+  // 布局状态 - 需要在导航之后初始化
+  const { layout, setLayout, layoutRef } = useLayoutState(tree, activeFolderId, setActiveFolderId, setErrorMessage);
+
   const {
-    activeFolderId,
-    setActiveFolderId,
     expandedIds,
     currentFolder,
     currentNodes,
@@ -43,10 +46,7 @@ export default function App() {
     handleSubFolderOpen,
     handleBackToParent,
     clearFolderClickTimer
-  } = useFolderNavigation(tree, { pinnedIds: [], lastOpenFolder: null, startupFolderId: null }, () => {});
-
-  // 布局状态 - 需要在导航之后初始化
-  const { layout, setLayout, layoutRef } = useLayoutState(tree, activeFolderId, setActiveFolderId, setErrorMessage);
+  } = useFolderNavigation(tree, layout, setLayout, activeFolderId, setActiveFolderId);
 
   // 对话框状态
   const [editTarget, setEditTarget] = useState<ContextMenuTarget | null>(null);

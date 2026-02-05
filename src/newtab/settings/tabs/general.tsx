@@ -1,4 +1,6 @@
+import { Checkbox } from "@/components/ui/checkbox";
 import { useEffect, useMemo, useState } from "react";
+
 import type { SearchEngine } from "@/shared/types";
 import type { BookmarkNode, LayoutState } from "@/shared/types";
 import { readBookmarkSnapshot, readLayoutState, readSearchSettings, writeLayoutState, writeSearchSettings } from "@/lib/storage";
@@ -40,6 +42,9 @@ export default function GeneralTab() {
   const [navSaving, setNavSaving] = useState(false);
   const [navError, setNavError] = useState<string | null>(null);
 
+  const [keepExpansion, setKeepExpansion] = useState(false);
+  const [expansionSaving, setExpansionSaving] = useState(false);
+
   useEffect(() => {
     void readSearchSettings().then((settings) => setEngine(settings.defaultEngine));
   }, []);
@@ -49,8 +54,10 @@ export default function GeneralTab() {
       try {
         const state = await readLayoutState();
         setStartupFolderId(state.startupFolderId);
+        setKeepExpansion(!!state.keepFolderExpansion);
 
         if (!state.startupFolderId) {
+
           setStartupFolderLabel("根目录");
           return;
         }
@@ -92,8 +99,23 @@ export default function GeneralTab() {
     }
   };
 
+  const toggleExpansion = async () => {
+    setExpansionSaving(true);
+    const next = !keepExpansion;
+    setKeepExpansion(next);
+    try {
+      const prev = await readLayoutState();
+      await writeLayoutState({ ...prev, keepFolderExpansion: next });
+    } catch (e) {
+      setKeepExpansion(!next);
+    } finally {
+      setExpansionSaving(false);
+    }
+  };
+
   return (
     <div className="space-y-4">
+
       <SettingsSection title="搜索" description="决定地址栏输入框默认用哪个引擎搜索。">
         <div className="space-y-2">
           {options.map((key) => (
@@ -175,6 +197,24 @@ export default function GeneralTab() {
         />
         {navError ? <div className="text-xs text-muted-text pt-1">{`操作失败：${navError}`}</div> : null}
       </SettingsSection>
+
+      <SettingsSection title="文件夹" description="管理文件夹的行为。">
+        <SettingsRow
+          label="保持展开状态"
+          description="下次进入该文件夹时，保持子文件夹的展开/折叠状态。"
+          control={
+            <div className="flex items-center gap-3">
+              <span className="text-sm text-muted-text">{keepExpansion ? "已开启" : "已关闭"}</span>
+              <Checkbox
+                checked={keepExpansion}
+                onChange={() => void toggleExpansion()}
+                disabled={expansionSaving}
+              />
+            </div>
+          }
+        />
+      </SettingsSection>
     </div>
   );
 }
+

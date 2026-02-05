@@ -5,7 +5,9 @@ const DEFAULT_ICON = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/sv
 export const emptyLayout: LayoutState = {
   pinnedIds: [],
   lastOpenFolder: null,
-  startupFolderId: null
+  startupFolderId: null,
+  keepFolderExpansion: false,
+  expandedFolderIds: []
 };
 
 export const findNodeById = (nodes: BookmarkNode[], id: string | null): BookmarkNode | null => {
