@@ -199,3 +199,49 @@ body::after {
 .dark body::after {
   background: radial-gradient(circle, #115e59 0%, transparent 70%); /* Teal 800 */
 }
+
+/* ===== 自定义背景图片支持 ===== */
+:root {
+  --custom-bg-image: none;
+  --custom-bg-size: cover;
+  --custom-bg-repeat: no-repeat;
+  --custom-bg-overlay: 30;
+}
+
+/* 当启用自定义背景时，隐藏默认渐变 */
+.custom-bg-active body::before,
+.custom-bg-active body::after {
+  display: none !important;
+}
+
+/* 自定义背景容器 */
+.custom-bg-active body {
+  position: relative;
+}
+
+/* 自定义背景图片层 */
+.custom-bg-active::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  background-image: var(--custom-bg-image);
+  background-size: var(--custom-bg-size);
+  background-position: center;
+  background-repeat: var(--custom-bg-repeat);
+  pointer-events: none;
+}
+
+/* 背景叠加层（确保内容可读性） */
+.custom-bg-active::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  background: rgba(255, 255, 255, calc(var(--custom-bg-overlay) / 100));
+  pointer-events: none;
+}
+
+.dark.custom-bg-active::after {
+  background: rgba(0, 0, 0, calc(var(--custom-bg-overlay) / 100));
+}
