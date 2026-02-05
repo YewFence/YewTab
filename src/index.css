@@ -53,40 +53,40 @@
 
 /* 暗色模式 */
 .dark {
-  --background: hsl(222.2 47.4% 11.2%); /* Deep Blue #0f172a */
-  --foreground: hsl(210, 98%, 80%);
-  --card: hsl(217.2 32.6% 17.5%); /* Dark Grey/Blue */
-  --card-foreground: hsl(210, 93%, 67%);
-  --popover: hsl(222.2 47.4% 11.2%);
-  --popover-foreground: hsl(210, 100%, 66%);
+  --background: hsl(224 71.4% 4.1%); /* #020617 (Slate 950) 更深邃的背景 */
+  --foreground: hsl(210 40% 98%);
+  --card: hsl(222.2 47.4% 11.2%); /* #0f172a (Slate 900) 卡片保持深蓝，与背景拉开层次 */
+  --card-foreground: hsl(210 40% 98%);
+  --popover: hsl(224 71.4% 4.1%);
+  --popover-foreground: hsl(210 40% 98%);
   --primary: hsl(217.2 91.2% 59.8%);
   --primary-foreground: hsl(222.2 47.4% 11.2%);
   --secondary: hsl(217.2 32.6% 17.5%);
-  --secondary-foreground: hsl(210, 93%, 77%);
+  --secondary-foreground: hsl(210 40% 98%);
   --muted: hsl(217.2 32.6% 17.5%);
   --muted-foreground: hsl(215 20.2% 65.1%);
   --accent: hsl(217.2 32.6% 17.5%);
-  --accent-foreground: hsl(210, 98%, 75%);
+  --accent-foreground: hsl(210 40% 98%);
   --destructive: hsl(0 62.8% 30.6%);
-  --destructive-foreground: hsl(210, 100%, 80%);
-  --border: hsl(217.2 32.6% 17.5%);
+  --destructive-foreground: hsl(210 40% 98%);
+  --border: hsl(217.2 32.6% 22%); /* 稍微提亮边框，增加轮廓感 */
   --input: hsl(217.2 32.6% 17.5%);
   --ring: hsl(224.3 76.3% 48%);
 
   /* 项目自定义暗色变量 */
-  --ink: #f1f5f9; /* Slate 100 - Brighter White */
-  --muted-text: #94a3b8; /* Slate 400 - Lighter Grey */
-  --card-bg: #1e293b; /* Slate 800 - Lighter Blue-Grey */
-  --glass: rgba(30, 41, 59, 0.7); /* Deep Blue Glass */
-  --glass-strong: rgba(30, 41, 59, 0.95);
-  --glass-subtle: rgba(30, 41, 59, 0.4);
-  --ios-bg: #0f172a; /* Slate 900 - Deep Blue */
+  --ink: #f8fafc; /* Slate 50 - 更亮白的文字 */
+  --muted-text: #94a3b8; /* Slate 400 */
+  --card-bg: #0f172a; /* Slate 900 - 卡片比背景稍亮 */
+  --glass: rgba(15, 23, 42, 0.75); /* 深色玻璃，增加不透明度以提升可读性 */
+  --glass-strong: rgba(15, 23, 42, 0.95);
+  --glass-subtle: rgba(15, 23, 42, 0.4);
+  --ios-bg: #020617; /* Slate 950 - 极夜背景 */
   
-  --border-glass: rgba(255, 255, 255, 0.1);
+  --border-glass: rgba(255, 255, 255, 0.08); /* 增加边框亮度，勾勒轮廓 */
 
-  --bg-inset: rgba(255, 255, 255, 0.10);
-  --bg-inset-hover: rgba(255, 255, 255, 0.20);
-  --border-inset: rgba(255, 255, 255, 0.30);
+  --bg-inset: rgba(0, 0, 0, 0.20); /* 更深的凹槽 */
+  --bg-inset-hover: rgba(0, 0, 0, 0.40);
+  --border-inset: rgba(255, 255, 255, 0.10);
 }
 
 /* ===== 第二步：@theme inline 映射 ===== */
@@ -193,9 +193,9 @@ body::after {
 }
 
 .dark body::before {
-  background: radial-gradient(circle, #1e3a5f 0%, transparent 70%);
+  background: radial-gradient(circle, #312e81 0%, transparent 70%); /* Indigo 900 */
 }
 
 .dark body::after {
-  background: radial-gradient(circle, #2d3748 0%, transparent 70%);
+  background: radial-gradient(circle, #115e59 0%, transparent 70%); /* Teal 800 */
 }
