@@ -38,6 +38,9 @@ export type LayoutState = {
   lastOpenFolder: string | null;
   // 打开新标签页时始终跳转到该文件夹（为 null 时不启用）
   startupFolderId: string | null;
+  // 文件夹展开状态持久化
+  keepFolderExpansion?: boolean;
+  expandedFolderIds?: string[];
 };
 
 export type LoadBookmarksResponse = {

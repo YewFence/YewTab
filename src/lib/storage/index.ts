@@ -6,7 +6,9 @@ import type { BookmarkSnapshot, BookmarkNode, LayoutState, SearchSettings, Backg
 const defaultLayoutState: LayoutState = {
   pinnedIds: [],
   lastOpenFolder: null,
-  startupFolderId: null
+  startupFolderId: null,
+  keepFolderExpansion: false,
+  expandedFolderIds: []
 };
 
 export async function readBookmarkSnapshot(): Promise<BookmarkSnapshot | null> {
