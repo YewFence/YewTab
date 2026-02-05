@@ -20,8 +20,6 @@ import SettingsModal from "@/newtab/settings";
 import { IconEdit, IconSettings } from "@/newtab/settings/icons";
 import { Button } from "@/components/ui/button";
 
-declare const __GIT_COMMIT__: string;
-
 const emptyLayout: LayoutState = {
   pinnedIds: [],
   lastOpenFolder: null,
@@ -632,7 +630,9 @@ export default function App() {
           <span className="text-[28px] font-bold tracking-tight block">Yew Tab</span>
           <div className="flex items-center gap-2">
             <span className="text-sm text-muted-text font-medium">书签一眼可见</span>
-            <span className="text-xs text-muted-text/50 font-mono">{__GIT_COMMIT__}</span>
+            {import.meta.env.DEV && (
+              <span className="text-xs text-muted-text/50 font-mono">{__APP_VERSION__}</span>
+            )}
           </div>
         </div>
 

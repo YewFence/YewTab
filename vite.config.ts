@@ -7,6 +7,15 @@ import path from "path";
 import { execSync } from "child_process";
 import manifest from "./src/manifest";
 
+const getGitVersion = () => {
+  try {
+    // 匹配 v 开头的语义化版本 tag
+    return execSync('git describe --tags --abbrev=0 --match "v*"').toString().trim();
+  } catch {
+    return null;
+  }
+};
+
 const getGitCommitHash = () => {
   try {
     return execSync("git rev-parse --short HEAD").toString().trim();
@@ -19,6 +28,7 @@ export default defineConfig({
   publicDir: false,
   plugins: [react(), tailwindcss(), crx({ manifest })],
   define: {
+    __APP_VERSION__: JSON.stringify(getGitVersion() || getGitCommitHash()),
     __GIT_COMMIT__: JSON.stringify(getGitCommitHash()),
   },
   resolve: {
