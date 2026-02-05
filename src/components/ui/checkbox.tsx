@@ -18,11 +18,11 @@ export const Checkbox = forwardRef<HTMLInputElement, CheckboxProps>(
           className={cn(
             "relative inline-flex items-center justify-center",
             "h-5 w-5 rounded-[6px]",
-            "border border-black/20 dark:border-white/30",
-            "bg-black/5 dark:bg-white/10",
+            "border border-border-inset",
+            "bg-bg-inset",
             "shadow-inner",
             "transition-all duration-150",
-            !disabled && "group-hover:bg-black/10 dark:group-hover:bg-white/20",
+            !disabled && "group-hover:bg-bg-inset-hover",
             checked && "bg-primary border-primary text-primary-foreground shadow-none"
           )}
         >

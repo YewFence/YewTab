@@ -33,8 +33,8 @@ export default function Breadcrumb({ segments, onNavigate }: BreadcrumbProps) {
       ref={containerRef}
       className={cn(
         "w-full overflow-x-auto",
-        "rounded-[16px] border border-black/5 dark:border-white/10",
-        "bg-white/45 backdrop-blur-[14px]",
+        "rounded-[16px] border border-border-glass",
+        "bg-glass-subtle backdrop-blur-[14px]",
         "px-3 py-2",
         "shadow-[0_10px_24px_rgba(0,0,0,0.06)]"
       )}
@@ -53,8 +53,8 @@ export default function Breadcrumb({ segments, onNavigate }: BreadcrumbProps) {
                   "px-2 py-1 rounded-[12px]",
                   "transition-colors",
                   isLast
-                    ? "text-ink bg-black/5"
-                    : "text-muted-text hover:text-ink hover:bg-black/5"
+                    ? "text-ink bg-bg-inset"
+                    : "text-muted-text hover:text-ink hover:bg-bg-inset-hover"
                 )}
                 title={seg.title}
                 aria-current={isLast ? "page" : undefined}

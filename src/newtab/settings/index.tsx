@@ -104,8 +104,8 @@ export default function SettingsModal({ open, onClose, tabs, initialTabKey }: Se
               "absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2",
               "w-[min(1100px,calc(100vw-28px))] h-[min(720px,calc(100vh-28px))]",
               "rounded-[22px] overflow-hidden",
-              "bg-white/70 backdrop-blur-[22px]",
-              "border border-black/5 dark:border-white/10",
+              "bg-glass backdrop-blur-[22px]",
+              "border border-border-glass",
               "shadow-[0_30px_90px_rgba(0,0,0,0.18)]"
             )}
             initial={{ opacity: 0, y: 12, scale: 0.98 }}
@@ -116,7 +116,7 @@ export default function SettingsModal({ open, onClose, tabs, initialTabKey }: Se
             aria-modal="true"
             aria-label="设置"
           >
-            <div className="flex items-center justify-between gap-4 px-5 py-4 border-b border-black/5 dark:border-white/10">
+            <div className="flex items-center justify-between gap-4 px-5 py-4 border-b border-border-glass">
               <div className="min-w-0">
                 <div className="text-lg font-extrabold tracking-tight">设置</div>
                 <div className="text-sm text-muted-text mt-0.5">UI 框架已就位，后端接口后补也不慌。</div>
@@ -129,8 +129,8 @@ export default function SettingsModal({ open, onClose, tabs, initialTabKey }: Se
             <div className="h-[calc(100%-72px)] grid grid-cols-1 md:grid-cols-[260px_1fr]">
               <nav
                 className={cn(
-                  "border-b md:border-b-0 md:border-r border-black/5 dark:border-white/10",
-                  "bg-white/40",
+                  "border-b md:border-b-0 md:border-r border-border-glass",
+                  "bg-glass-subtle",
                   "overflow-x-auto md:overflow-y-auto",
                   "px-3 py-3"
                 )}
@@ -150,8 +150,8 @@ export default function SettingsModal({ open, onClose, tabs, initialTabKey }: Se
                           "transition-all duration-150",
                           "border border-transparent",
                           isActive
-                            ? "bg-white/85 border-black/5 dark:border-white/10 shadow-[0_10px_22px_rgba(0,0,0,0.08)]"
-                            : "hover:bg-white/60"
+                            ? "bg-glass-strong border-border-glass shadow-[0_10px_22px_rgba(0,0,0,0.08)]"
+                            : "hover:bg-glass"
                         )}
                         onClick={() => setActive(t.key)}
                       >
@@ -166,7 +166,7 @@ export default function SettingsModal({ open, onClose, tabs, initialTabKey }: Se
                 </div>
               </nav>
 
-              <main className="overflow-y-auto px-5 py-5 bg-white/20">
+              <main className="overflow-y-auto px-5 py-5 bg-bg-inset">
                 <AnimatePresence mode="wait">
                   <motion.div
                     key={activeTab?.key}

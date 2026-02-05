@@ -42,11 +42,11 @@ export default function SearchBar() {
     <form
       className={cn(
         "flex items-center gap-3 flex-1 max-w-[500px]",
-        "bg-white/60 backdrop-blur-[20px] px-3 py-2",
-        "rounded-[16px] border border-white/30",
+        "bg-glass-subtle backdrop-blur-[20px] px-3 py-2",
+        "rounded-[16px] border border-border-glass",
         "shadow-[0_2px_10px_rgba(0,0,0,0.03)]",
         "transition-all duration-300",
-        "focus-within:bg-white/90",
+        "focus-within:bg-glass-strong",
         "focus-within:shadow-[0_8px_20px_rgba(0,0,0,0.08)]",
         "focus-within:-translate-y-px"
       )}

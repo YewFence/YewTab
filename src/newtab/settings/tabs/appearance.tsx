@@ -34,7 +34,7 @@ export default function AppearanceTab() {
                     "border transition-all duration-200",
                     theme === m
                       ? "bg-primary/5 border-primary/30 text-primary shadow-sm"
-                      : "bg-white/55 border-black/5 dark:border-white/10 hover:bg-white/75 text-ink"
+                      : "bg-glass-subtle border-border-glass hover:bg-glass text-ink"
                   )}
                 >
                   <Radio

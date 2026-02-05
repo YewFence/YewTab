@@ -107,7 +107,7 @@ export default function EditBookmarkDialog({
       <div
         className={cn(
           "relative w-full max-w-[520px]",
-          "rounded-[18px] border border-white/50",
+          "rounded-[18px] border border-border-glass",
           "bg-glass-strong/95 backdrop-blur-[14px]",
           "shadow-[0_20px_60px_rgba(0,0,0,0.22)]",
           "p-5"
@@ -124,7 +124,7 @@ export default function EditBookmarkDialog({
             type="button"
             className={cn(
               "h-9 w-9 rounded-[12px] grid place-items-center",
-              "bg-black/5 hover:bg-black/10",
+              "bg-bg-inset hover:bg-bg-inset-hover",
               "transition-colors",
               pending && "opacity-60 cursor-not-allowed"
             )}
@@ -181,8 +181,8 @@ export default function EditBookmarkDialog({
               onChange={(e) => setTitle(e.target.value)}
               className={cn(
                 "w-full rounded-[12px] px-3 py-2",
-                "bg-white/70 dark:bg-black/20",
-                "border border-white/40",
+                "bg-glass",
+                "border border-border-glass",
                 "text-ink",
                 "outline-none",
                 "focus:ring-2 focus:ring-ring/30 focus:border-transparent",
@@ -201,8 +201,8 @@ export default function EditBookmarkDialog({
                 onChange={(e) => setUrl(e.target.value)}
                 className={cn(
                   "w-full rounded-[12px] px-3 py-2",
-                  "bg-white/70 dark:bg-black/20",
-                  "border border-white/40",
+                  "bg-glass",
+                  "border border-border-glass",
                   "text-ink",
                   "outline-none",
                   "focus:ring-2 focus:ring-ring/30 focus:border-transparent",
@@ -225,7 +225,7 @@ export default function EditBookmarkDialog({
               type="button"
               className={cn(
                 "px-4 py-2 rounded-[12px] font-semibold",
-                "bg-black/5 hover:bg-black/10",
+                "bg-bg-inset hover:bg-bg-inset-hover",
                 "text-ink",
                 "transition-colors",
                 pending && "opacity-60 cursor-not-allowed"

@@ -18,11 +18,11 @@ export const Radio = forwardRef<HTMLInputElement, RadioProps>(
           className={cn(
             "relative inline-flex items-center justify-center",
             "h-5 w-5 rounded-full",
-            "border border-black/20 dark:border-white/30",
-            "bg-black/5 dark:bg-white/10", // 降低背景亮度，形成“凹槽”感，与纯白/玻璃背景区分
+            "border border-border-inset",
+            "bg-bg-inset", // 降低背景亮度，形成“凹槽”感，与纯白/玻璃背景区分
             "shadow-inner", // 增加内阴影增强深度感
             "transition-all duration-150",
-            !disabled && "group-hover:bg-black/10 dark:group-hover:bg-white/20"
+            !disabled && "group-hover:bg-bg-inset-hover"
           )}
         >
           <span

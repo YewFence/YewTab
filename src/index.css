@@ -40,37 +40,53 @@
   --radius-md: 14px;
   --grid-gap: 24px;
   --card-min-width: 220px;
+
+  /* 玻璃态边框 */
+  --border-glass: rgba(0, 0, 0, 0.05);
+  --glass-subtle: rgba(255, 255, 255, 0.4);
+
+  /* 嵌入式/凹槽背景 (用于 Checkbox/Radio) */
+  --bg-inset: rgba(0, 0, 0, 0.05);
+  --bg-inset-hover: rgba(0, 0, 0, 0.10);
+  --border-inset: rgba(0, 0, 0, 0.20);
 }
 
 /* 暗色模式 */
 .dark {
-  --background: hsl(222.2 84% 4.9%);
-  --foreground: hsl(210 40% 98%);
-  --card: hsl(222.2 84% 4.9%);
-  --card-foreground: hsl(210 40% 98%);
-  --popover: hsl(222.2 84% 4.9%);
-  --popover-foreground: hsl(210 40% 98%);
+  --background: hsl(222.2 47.4% 11.2%); /* Deep Blue #0f172a */
+  --foreground: hsl(210, 98%, 80%);
+  --card: hsl(217.2 32.6% 17.5%); /* Dark Grey/Blue */
+  --card-foreground: hsl(210, 93%, 67%);
+  --popover: hsl(222.2 47.4% 11.2%);
+  --popover-foreground: hsl(210, 100%, 66%);
   --primary: hsl(217.2 91.2% 59.8%);
   --primary-foreground: hsl(222.2 47.4% 11.2%);
   --secondary: hsl(217.2 32.6% 17.5%);
-  --secondary-foreground: hsl(210 40% 98%);
+  --secondary-foreground: hsl(210, 93%, 77%);
   --muted: hsl(217.2 32.6% 17.5%);
   --muted-foreground: hsl(215 20.2% 65.1%);
   --accent: hsl(217.2 32.6% 17.5%);
-  --accent-foreground: hsl(210 40% 98%);
+  --accent-foreground: hsl(210, 98%, 75%);
   --destructive: hsl(0 62.8% 30.6%);
-  --destructive-foreground: hsl(210 40% 98%);
+  --destructive-foreground: hsl(210, 100%, 80%);
   --border: hsl(217.2 32.6% 17.5%);
   --input: hsl(217.2 32.6% 17.5%);
   --ring: hsl(224.3 76.3% 48%);
 
   /* 项目自定义暗色变量 */
-  --ink: #e8e8ed;
-  --muted-text: #a0a0ab;
-  --card-bg: #1c1c1e;
-  --glass: rgba(28, 28, 30, 0.8);
-  --glass-strong: rgba(28, 28, 30, 0.95);
-  --ios-bg: #000000;
+  --ink: #f1f5f9; /* Slate 100 - Brighter White */
+  --muted-text: #94a3b8; /* Slate 400 - Lighter Grey */
+  --card-bg: #1e293b; /* Slate 800 - Lighter Blue-Grey */
+  --glass: rgba(30, 41, 59, 0.7); /* Deep Blue Glass */
+  --glass-strong: rgba(30, 41, 59, 0.95);
+  --glass-subtle: rgba(30, 41, 59, 0.4);
+  --ios-bg: #0f172a; /* Slate 900 - Deep Blue */
+  
+  --border-glass: rgba(255, 255, 255, 0.1);
+
+  --bg-inset: rgba(255, 255, 255, 0.10);
+  --bg-inset-hover: rgba(255, 255, 255, 0.20);
+  --border-inset: rgba(255, 255, 255, 0.30);
 }
 
 /* ===== 第二步：@theme inline 映射 ===== */
@@ -104,7 +120,14 @@
   --color-card-bg: var(--card-bg);
   --color-glass: var(--glass);
   --color-glass-strong: var(--glass-strong);
+  --color-glass-subtle: var(--glass-subtle);
   --color-ios-bg: var(--ios-bg);
+
+  --color-border-glass: var(--border-glass);
+
+  --color-bg-inset: var(--bg-inset);
+  --color-bg-inset-hover: var(--bg-inset-hover);
+  --color-border-inset: var(--border-inset);
 
   --shadow-card: var(--shadow-card);
   --shadow-card-hover: var(--shadow-card-hover);
