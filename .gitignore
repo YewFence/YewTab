@@ -2,3 +2,9 @@ node_modules/
 dist/
 .env
 .vscode/
+
+.claude/
+.idea/
+.DS_Store
+vite.config.ts.*
+!vite.config.ts

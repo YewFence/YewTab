@@ -2,12 +2,15 @@
 export const MESSAGE_TYPES = {
   LOAD_BOOKMARKS: "load_bookmarks",
   APPLY_BOOKMARK_CHANGE: "apply_bookmark_change",
+  REORDER_BOOKMARK_CHILDREN: "reorder_bookmark_children",
   BOOKMARKS_CHANGED: "bookmarks_changed"
 } as const;
 
 export const STORAGE_KEYS = {
   SNAPSHOT: "bookmarks_snapshot",
-  LAYOUT: "layout_state"
+  LAYOUT: "layout_state",
+  SEARCH_SETTINGS: "search_settings",
+  BACKGROUND_SETTINGS: "background_settings"
 } as const;
 
 export const SNAPSHOT_VERSION = 1;

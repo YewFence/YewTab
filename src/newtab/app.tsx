@@ -1,179 +1,188 @@
-// 负责渲染书签卡片网格与交互状态。
-import { useCallback, useEffect, useMemo, useState } from "react";
-import { MESSAGE_TYPES } from "../shared/constants";
-import { applyBookmarkChange, requestBookmarks } from "../lib/messaging";
-import { readBookmarkSnapshot, readLayoutState, writeLayoutState } from "../lib/storage";
-import type { BookmarkAction, BookmarkNode, LayoutState } from "../shared/types";
-import BookmarkCard from "./components/bookmark-card";
-import FolderCard from "./components/folder-card";
+import { useMemo, useRef, useState } from "react";
+import { useBackground } from "@/hooks/use-background";
+import { useBookmarks } from "@/hooks/use-bookmarks";
+import { useEditMode } from "@/hooks/use-edit-mode";
+import { useContextMenu } from "@/hooks/use-context-menu";
+import { useGridColumns } from "@/hooks/use-grid-columns";
+import { useFolderNavigation } from "@/hooks/use-folder-navigation";
+import { useLayoutState } from "@/hooks/use-layout-state";
+import { useSortableOrder } from "@/hooks/use-sortable-order";
+import { useContextMenuItems } from "./hooks/use-context-menu-items";
+import { getTopLevelNodes } from "./utils";
+import type { ContextMenuTarget } from "./types";
 
-const emptyLayout: LayoutState = {
-  pinnedIds: [],
-  lastOpenFolder: null
-};
-
-const findNodeById = (nodes: BookmarkNode[], id: string | null): BookmarkNode | null => {
-  if (!id) {
-    return null;
-  }
-  for (const node of nodes) {
-    if (node.id === id) {
-      return node;
-    }
-    if (node.children?.length) {
-      const found = findNodeById(node.children, id);
-      if (found) {
-        return found;
-      }
-    }
-  }
-  return null;
-};
-
-const getTopLevelNodes = (tree: BookmarkNode[]): BookmarkNode[] => {
-  return tree[0]?.children ?? [];
-};
-
-const getCardTitle = (node: BookmarkNode): string => {
-  return node.title || (node.url ?? "未命名");
-};
+import AppHeader from "./components/app-header";
+import BookmarkGrid from "./components/bookmark-grid";
+import DialogsManager from "./components/dialogs-manager";
+import Breadcrumb from "./components/breadcrumb";
+import ContextMenu from "./components/context-menu";
+import SettingsModal from "./settings";
 
 export default function App() {
-  const [tree, setTree] = useState<BookmarkNode[]>([]);
-  const [layout, setLayout] = useState<LayoutState>(emptyLayout);
+  useBackground();
+  const gridRef = useRef<HTMLDivElement>(null);
+
+  // 核心数据
+  const { tree, offline, errorMessage, setErrorMessage } = useBookmarks();
+  const { editMode, setEditMode } = useEditMode();
+  const { contextMenu, openContextMenu, closeContextMenu } = useContextMenu();
+  useGridColumns(gridRef, [tree]);
+
+  // 导航状态
+  const [settingsOpen, setSettingsOpen] = useState(false);
   const [activeFolderId, setActiveFolderId] = useState<string | null>(null);
-  const [lastUpdated, setLastUpdated] = useState<string | null>(null);
-  const [offline, setOffline] = useState(false);
-  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
-  const loadBookmarks = useCallback(async () => {
-    try {
-      const response = await requestBookmarks();
-      setTree(response.tree);
-      setLastUpdated(response.updatedAt);
-      setOffline(response.fromCache);
-      setErrorMessage(response.error ?? null);
-      return;
-    } catch (error) {
-      const cached = await readBookmarkSnapshot();
-      if (cached) {
-        setTree(cached.tree);
-        setLastUpdated(cached.updatedAt);
-        setOffline(true);
-        setErrorMessage("书签读取失败，已切换至离线快照");
-        return;
-      }
-      setErrorMessage(error instanceof Error ? error.message : "无法读取书签");
-    }
-  }, []);
+  // 布局状态 - 需要在导航之后初始化
+  const { layout, setLayout, layoutRef } = useLayoutState(tree, activeFolderId, setActiveFolderId, setErrorMessage);
 
-  useEffect(() => {
-    void loadBookmarks();
-  }, [loadBookmarks]);
+  const {
+    expandedIds,
+    currentFolder,
+    currentNodes,
+    fullPath,
+    breadcrumbSegments,
+    navigateToFolder,
+    handleFolderToggleGesture,
+    handleSubFolderOpen,
+    handleBackToParent,
+    clearFolderClickTimer
+  } = useFolderNavigation(tree, layout, setLayout, activeFolderId, setActiveFolderId);
 
-  useEffect(() => {
-    void readLayoutState().then((state) => {
-      setLayout(state);
-      if (state.lastOpenFolder) {
-        setActiveFolderId(state.lastOpenFolder);
-      }
-    });
-  }, []);
+  // 对话框状态
+  const [editTarget, setEditTarget] = useState<ContextMenuTarget | null>(null);
+  const [editServerError, setEditServerError] = useState<string | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<Extract<ContextMenuTarget, { kind: "bookmark" }> | null>(null);
+  const [deleteServerError, setDeleteServerError] = useState<string | null>(null);
+  const [createFolderOpen, setCreateFolderOpen] = useState(false);
+  const [createFolderParentId, setCreateFolderParentId] = useState<string | null>(null);
+  const [createFolderServerError, setCreateFolderServerError] = useState<string | null>(null);
 
-  useEffect(() => {
-    const handler = (message: { type?: string }) => {
-      if (message?.type === MESSAGE_TYPES.BOOKMARKS_CHANGED) {
-        void loadBookmarks();
-      }
-    };
-    chrome.runtime.onMessage.addListener(handler);
-    return () => {
-      chrome.runtime.onMessage.removeListener(handler);
-    };
-  }, [loadBookmarks]);
-
+  // 计算值
   const rootNodes = useMemo(() => getTopLevelNodes(tree), [tree]);
-  const currentFolder = useMemo(
-    () => findNodeById(rootNodes, activeFolderId),
-    [rootNodes, activeFolderId]
-  );
-  const currentNodes = currentFolder?.children ?? rootNodes;
-
-  const handleOpenFolder = async (id: string) => {
-    setActiveFolderId(id);
-    const nextState = { ...layout, lastOpenFolder: id };
-    setLayout(nextState);
-    await writeLayoutState(nextState);
-  };
-
-  const handleBackToRoot = async () => {
-    setActiveFolderId(null);
-    const nextState = { ...layout, lastOpenFolder: null };
-    setLayout(nextState);
-    await writeLayoutState(nextState);
-  };
-
-  const handleCreateQuickBookmark = async () => {
-    const action: BookmarkAction = {
-      type: "create",
-      parentId: (currentFolder ?? rootNodes[0])?.id ?? "0",
-      title: "未命名书签",
-      url: "https://www.example.com"
-    };
-    const response = await applyBookmarkChange(action);
-    if (!response.success) {
-      setErrorMessage(response.error ?? "写回书签失败");
+  const parentIdForCurrentView = useMemo(() => {
+    if (activeFolderId) {
+      return activeFolderId;
     }
+    return tree[0]?.id ?? "0";
+  }, [activeFolderId, tree]);
+
+  // 排序逻辑
+  const { orderedIds, handleReorder } = useSortableOrder(
+    currentNodes,
+    activeFolderId,
+    parentIdForCurrentView,
+    offline,
+    setErrorMessage
+  );
+
+  // 右键菜单项
+  const contextMenuItems = useContextMenuItems({
+    contextMenu,
+    layout,
+    layoutRef,
+    setLayout,
+    closeContextMenu,
+    navigateToFolder,
+    setEditTarget,
+    setDeleteTarget,
+    setEditServerError,
+    setDeleteServerError
+  });
+
+  const openCreateFolderDialog = () => {
+    const parentId = (currentFolder ?? rootNodes[0])?.id ?? "0";
+    setCreateFolderParentId(parentId);
+    setCreateFolderServerError(null);
+    setCreateFolderOpen(true);
   };
+
+  const defaultParentId = (currentFolder ?? rootNodes[0])?.id ?? "0";
 
   return (
-    <div className="page">
-      <header className="topbar">
-        <div className="brand">
-          <span className="brand__title">Yew Tab</span>
-          <span className="brand__subtitle">书签一眼可见</span>
-        </div>
-        <div className="status">
-          {offline && <span className="badge badge--warning">离线快照</span>}
-          {lastUpdated && (
-            <span className="badge badge--ghost">更新于 {new Date(lastUpdated).toLocaleTimeString()}</span>
-          )}
-          {activeFolderId && (
-            <button className="ghost-button" onClick={handleBackToRoot} type="button">
-              返回根目录
-            </button>
-          )}
-          <button className="primary-button" onClick={handleCreateQuickBookmark} type="button">
-            快速新增
-          </button>
-        </div>
-      </header>
+    <div className="px-[clamp(20px,5vw,60px)] py-10 max-w-[1600px] mx-auto w-full flex-1">
+      <AppHeader
+        offline={offline}
+        editMode={editMode}
+        onEditModeToggle={() => setEditMode((v) => !v)}
+        onSettingsOpen={() => setSettingsOpen(true)}
+        onCreateFolder={openCreateFolderDialog}
+      />
 
-      {errorMessage && <div className="alert">{errorMessage}</div>}
+      <div className="mb-6">
+        <Breadcrumb
+          segments={breadcrumbSegments}
+          onNavigate={(id) => {
+            void navigateToFolder(id);
+          }}
+        />
+      </div>
 
-      <section className="grid">
-        {currentNodes.length === 0 && (
-          <div className="empty">
-            <p>这里还没有书签，先在 Edge 里收藏一些吧。</p>
-          </div>
-        )}
-        {currentNodes.map((node) =>
-          node.children?.length ? (
-            <FolderCard
-              key={node.id}
-              title={getCardTitle(node)}
-              count={node.children.length}
-              onOpen={() => void handleOpenFolder(node.id)}
-            />
-          ) : (
-            <BookmarkCard
-              key={node.id}
-              title={getCardTitle(node)}
-              url={node.url ?? ""}
-            />
-          )
-        )}
+      {errorMessage && (
+        <div className="bg-destructive/10 text-destructive px-4 py-3 rounded-lg mb-6">
+          {errorMessage}
+        </div>
+      )}
+
+      <section
+        className="grid grid-cols-[repeat(auto-fill,minmax(220px,1fr))] gap-6 relative [grid-auto-flow:row_dense]"
+        ref={gridRef}
+      >
+        <BookmarkGrid
+          activeFolderId={activeFolderId}
+          currentNodes={currentNodes}
+          orderedIds={orderedIds}
+          expandedIds={expandedIds}
+          editMode={editMode}
+          offline={offline}
+          parentIdForCurrentView={parentIdForCurrentView}
+          fullPath={fullPath}
+          onReorder={handleReorder}
+          onBackToParent={handleBackToParent}
+          onFolderToggleGesture={handleFolderToggleGesture}
+          onSubFolderOpen={handleSubFolderOpen}
+          onContextMenu={openContextMenu}
+          clearFolderClickTimer={clearFolderClickTimer}
+        />
       </section>
+
+      <ContextMenu
+        open={!!contextMenu}
+        x={contextMenu?.x ?? 0}
+        y={contextMenu?.y ?? 0}
+        items={contextMenuItems}
+        onClose={closeContextMenu}
+      />
+
+      <DialogsManager
+        editTarget={editTarget}
+        editServerError={editServerError}
+        onEditClose={() => {
+          setEditTarget(null);
+          setEditServerError(null);
+        }}
+        setErrorMessage={setErrorMessage}
+        deleteTarget={deleteTarget}
+        deleteServerError={deleteServerError}
+        onDeleteClose={() => {
+          setDeleteTarget(null);
+          setDeleteServerError(null);
+        }}
+        createFolderOpen={createFolderOpen}
+        createFolderParentId={createFolderParentId}
+        createFolderServerError={createFolderServerError}
+        onCreateFolderClose={() => {
+          setCreateFolderOpen(false);
+          setCreateFolderParentId(null);
+          setCreateFolderServerError(null);
+        }}
+        offline={offline}
+        defaultParentId={defaultParentId}
+        setEditServerError={setEditServerError}
+        setDeleteServerError={setDeleteServerError}
+        setCreateFolderServerError={setCreateFolderServerError}
+      />
+
+      <SettingsModal open={settingsOpen} onClose={() => setSettingsOpen(false)} />
     </div>
   );
 }
