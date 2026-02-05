@@ -20,7 +20,7 @@ export default function AppearanceTab() {
 
   return (
     <div className="space-y-4">
-      <SettingsSection title="主题" description="这里直接接到前端 ThemeProvider，后端接口以后再补也不影响。">
+      <SettingsSection title="主题" description="这里直接接到前端 ThemeProvider，后端接口暂未实现存储。">
         <SettingsRow
           label="外观模式"
           description="选择浅色/深色/跟随系统"

@@ -132,7 +132,6 @@ export default function GeneralTab() {
             >
               <div className="min-w-0">
                 <div className="font-semibold text-ink">{ENGINE_LABELS[key]}</div>
-                <div className="text-xs text-muted-text mt-0.5">默认搜索引擎</div>
               </div>
               <Radio
                 name="search-engine"

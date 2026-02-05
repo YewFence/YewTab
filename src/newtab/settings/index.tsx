@@ -119,7 +119,6 @@ export default function SettingsModal({ open, onClose, tabs, initialTabKey }: Se
             <div className="flex items-center justify-between gap-4 px-5 py-4 border-b border-border-glass">
               <div className="min-w-0">
                 <div className="text-lg font-extrabold tracking-tight">设置</div>
-                <div className="text-sm text-muted-text mt-0.5">UI 框架已就位，后端接口后补也不慌。</div>
               </div>
               <Button variant="ghost" className="h-10 w-10 px-0" onClick={onClose} aria-label="关闭">
                 <IconClose className="h-5 w-5" />
