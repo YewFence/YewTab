@@ -45,6 +45,9 @@ export default function GeneralTab() {
   const [keepExpansion, setKeepExpansion] = useState(false);
   const [expansionSaving, setExpansionSaving] = useState(false);
 
+  const [openInNewTab, setOpenInNewTab] = useState(false);
+  const [openInNewTabSaving, setOpenInNewTabSaving] = useState(false);
+
   useEffect(() => {
     void readSearchSettings().then((settings) => setEngine(settings.defaultEngine));
   }, []);
@@ -55,6 +58,7 @@ export default function GeneralTab() {
         const state = await readLayoutState();
         setStartupFolderId(state.startupFolderId);
         setKeepExpansion(!!state.keepFolderExpansion);
+        setOpenInNewTab(!!state.openInNewTab);
 
         if (!state.startupFolderId) {
 
@@ -110,6 +114,20 @@ export default function GeneralTab() {
       setKeepExpansion(!next);
     } finally {
       setExpansionSaving(false);
+    }
+  };
+
+  const toggleOpenInNewTab = async () => {
+    setOpenInNewTabSaving(true);
+    const next = !openInNewTab;
+    setOpenInNewTab(next);
+    try {
+      const prev = await readLayoutState();
+      await writeLayoutState({ ...prev, openInNewTab: next });
+    } catch (e) {
+      setOpenInNewTab(!next);
+    } finally {
+      setOpenInNewTabSaving(false);
     }
   };
 
@@ -195,6 +213,23 @@ export default function GeneralTab() {
           }
         />
         {navError ? <div className="text-xs text-muted-text pt-1">{`操作失败：${navError}`}</div> : null}
+      </SettingsSection>
+
+      <SettingsSection title="书签" description="管理书签的行为。">
+        <SettingsRow
+          label="在新标签页打开"
+          description="点击书签卡片时，是否总是打开新的浏览器标签页。"
+          control={
+            <div className="flex items-center gap-3">
+              <span className="text-sm text-muted-text">{openInNewTab ? "已开启" : "已关闭"}</span>
+              <Checkbox
+                checked={openInNewTab}
+                onChange={() => void toggleOpenInNewTab()}
+                disabled={openInNewTabSaving}
+              />
+            </div>
+          }
+        />
       </SettingsSection>
 
       <SettingsSection title="文件夹" description="管理文件夹的行为。">

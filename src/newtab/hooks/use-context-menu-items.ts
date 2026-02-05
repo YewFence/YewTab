@@ -43,6 +43,7 @@ export function useContextMenuItems({
           label: isStartup ? "取消启动文件夹" : "设为启动文件夹",
           onSelect: () => {
             void (async () => {
+              if (!layoutRef.current) return;
               const next = {
                 ...layoutRef.current,
                 startupFolderId: isStartup ? null : t.id,
@@ -77,6 +78,26 @@ export function useContextMenuItems({
     }
 
     return [
+      {
+        key: "open-new-tab",
+        label: "在新标签页打开",
+        onSelect: () => {
+          if (t.url) {
+            window.open(t.url, "_blank", "noopener,noreferrer");
+          }
+          closeContextMenu();
+        }
+      },
+      {
+        key: "open-current-tab",
+        label: "在当前标签页打开",
+        onSelect: () => {
+          if (t.url) {
+            window.location.href = t.url;
+          }
+          closeContextMenu();
+        }
+      },
       {
         key: "edit",
         label: "编辑...",

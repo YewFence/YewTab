@@ -16,6 +16,7 @@ type BookmarkGridProps = {
   offline: boolean;
   parentIdForCurrentView: string;
   fullPath: BookmarkNode[];
+  openInNewTab?: boolean;
   onReorder: (nextIds: string[]) => void;
   onBackToParent: () => void;
   onFolderToggleGesture: (id: string, isOpen: boolean) => void;
@@ -33,6 +34,7 @@ export default function BookmarkGrid({
   offline,
   parentIdForCurrentView,
   fullPath,
+  openInNewTab,
   onReorder,
   onBackToParent,
   onFolderToggleGesture,
@@ -134,6 +136,7 @@ export default function BookmarkGrid({
             id={node.id}
             title={getCardTitle(node)}
             url={node.url ?? ""}
+            openInNewTab={openInNewTab}
             disableOpen={editMode}
             onContextMenu={onContextMenu}
             dragHandle={dragHandle}
