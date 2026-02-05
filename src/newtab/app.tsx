@@ -136,6 +136,7 @@ export default function App() {
           offline={offline}
           parentIdForCurrentView={parentIdForCurrentView}
           fullPath={fullPath}
+          openInNewTab={layout.openInNewTab}
           onReorder={handleReorder}
           onBackToParent={handleBackToParent}
           onFolderToggleGesture={handleFolderToggleGesture}
