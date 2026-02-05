@@ -13,6 +13,7 @@ import SearchBar from "./components/search-bar";
 import ContextMenu, { type ContextMenuItem } from "./components/context-menu";
 import EditBookmarkDialog from "./components/edit-bookmark-dialog";
 import ConfirmDialog from "./components/confirm-dialog";
+import CreateFolderDialog from "./components/create-folder-dialog";
 import Breadcrumb from "./components/breadcrumb";
 import type { ContextMenuTarget } from "./types";
 import SettingsModal from "@/newtab/settings";
@@ -87,6 +88,10 @@ export default function App() {
   const [editServerError, setEditServerError] = useState<string | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<Extract<ContextMenuTarget, { kind: "bookmark" }> | null>(null);
   const [deleteServerError, setDeleteServerError] = useState<string | null>(null);
+
+  const [createFolderOpen, setCreateFolderOpen] = useState(false);
+  const [createFolderParentId, setCreateFolderParentId] = useState<string | null>(null);
+  const [createFolderServerError, setCreateFolderServerError] = useState<string | null>(null);
 
   const suppressReactContextMenuRef = useRef(0);
   
@@ -395,17 +400,12 @@ export default function App() {
     await navigateToFolder(parent.id);
   };
 
-  const handleCreateQuickBookmark = async () => {
-    const action: BookmarkAction = {
-      type: "create",
-      parentId: (currentFolder ?? rootNodes[0])?.id ?? "0",
-      title: "未命名书签",
-      url: "https://www.example.com"
-    };
-    const response = await applyBookmarkChange(action);
-    if (!response.success) {
-      setErrorMessage(response.error ?? "写回书签失败");
-    }
+  const openCreateFolderDialog = () => {
+    // 根视图默认落到第一个顶层文件夹（通常是“书签栏”），与之前的默认落点保持一致。
+    const parentId = (currentFolder ?? rootNodes[0])?.id ?? "0";
+    setCreateFolderParentId(parentId);
+    setCreateFolderServerError(null);
+    setCreateFolderOpen(true);
   };
 
   const contextMenuItems: ContextMenuItem[] = useMemo(() => {
@@ -578,19 +578,21 @@ export default function App() {
           }
           const isExpanded = expandedIds.has(node.id);
 
-          if (node.children?.length) {
+          // Folders can be empty, so detect by missing URL instead of children length.
+          if (!node.url) {
+            const childrenNodes = node.children ?? [];
             return (
               <FolderCard
                 id={node.id}
                 title={getCardTitle(node)}
-                count={node.children.length}
+                count={childrenNodes.length}
                 isOpen={isExpanded}
                 onToggle={() => handleFolderToggleGesture(node.id, isExpanded)}
                 onDoubleClick={() => {
                   clearFolderClickTimer();
                   void handleSubFolderOpen(node.id);
                 }}
-                childrenNodes={node.children}
+                childrenNodes={childrenNodes}
                 onSubFolderClick={handleSubFolderOpen}
                 onContextMenu={openContextMenu}
                 dragHandle={dragHandle}
@@ -658,8 +660,8 @@ export default function App() {
           >
             <IconSettings className="h-5 w-5" />
           </Button>
-          <Button variant="primary" onClick={handleCreateQuickBookmark}>
-            快速新增
+          <Button variant="primary" onClick={openCreateFolderDialog}>
+            新增文件夹
           </Button>
         </div>
       </header>
@@ -751,6 +753,39 @@ export default function App() {
           if (!response.success) {
             const msg = response.error ?? "删除失败";
             setDeleteServerError(msg);
+            setErrorMessage(msg);
+            return false;
+          }
+          return true;
+        }}
+      />
+
+      <CreateFolderDialog
+        open={createFolderOpen}
+        serverError={createFolderServerError}
+        onClose={() => {
+          setCreateFolderOpen(false);
+          setCreateFolderParentId(null);
+          setCreateFolderServerError(null);
+        }}
+        onSubmit={async (payload) => {
+          if (offline) {
+            const msg = "离线快照模式下无法创建文件夹";
+            setCreateFolderServerError(msg);
+            setErrorMessage(msg);
+            return false;
+          }
+
+          const parentId = createFolderParentId ?? (currentFolder ?? rootNodes[0])?.id ?? "0";
+          const action: BookmarkAction = {
+            type: "create",
+            parentId,
+            title: payload.title
+          };
+          const response = await applyBookmarkChange(action);
+          if (!response.success) {
+            const msg = response.error ?? "创建文件夹失败";
+            setCreateFolderServerError(msg);
             setErrorMessage(msg);
             return false;
           }
