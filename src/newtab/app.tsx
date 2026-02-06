@@ -1,4 +1,4 @@
-import { useMemo, useRef, useState } from "react";
+import { useMemo, useRef, useState, useEffect } from "react";
 import { useBackground } from "@/hooks/use-background";
 import { useBookmarks } from "@/hooks/use-bookmarks";
 import { useEditMode } from "@/hooks/use-edit-mode";
@@ -17,6 +17,7 @@ import DialogsManager from "./components/dialogs-manager";
 import Breadcrumb from "./components/breadcrumb";
 import ContextMenu from "./components/context-menu";
 import SettingsModal from "./settings";
+import SearchModal from "./components/search-modal";
 
 export default function App() {
   useBackground();
@@ -30,6 +31,7 @@ export default function App() {
 
   // 导航状态
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [searchOpen, setSearchOpen] = useState(false);
   const [activeFolderId, setActiveFolderId] = useState<string | null>(null);
 
   // 布局状态 - 需要在导航之后初始化
@@ -56,6 +58,25 @@ export default function App() {
   const [createFolderOpen, setCreateFolderOpen] = useState(false);
   const [createFolderParentId, setCreateFolderParentId] = useState<string | null>(null);
   const [createFolderServerError, setCreateFolderServerError] = useState<string | null>(null);
+
+  // 快捷键监听
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Ctrl+K or Cmd+K to open search
+      if ((e.ctrlKey || e.metaKey) && e.key === "k") {
+        e.preventDefault();
+        setSearchOpen(true);
+      }
+      // / key to open search (unless typing in input)
+      if (e.key === "/" && !["INPUT", "TEXTAREA"].includes((e.target as HTMLElement).tagName)) {
+        e.preventDefault();
+        setSearchOpen(true);
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, []);
 
   // 计算值
   const rootNodes = useMemo(() => getTopLevelNodes(tree), [tree]);
@@ -106,6 +127,7 @@ export default function App() {
         onEditModeToggle={() => setEditMode((v) => !v)}
         onSettingsOpen={() => setSettingsOpen(true)}
         onCreateFolder={openCreateFolderDialog}
+        onSearchOpen={() => setSearchOpen(true)}
       />
 
       <div className="mb-6">
@@ -184,6 +206,16 @@ export default function App() {
       />
 
       <SettingsModal open={settingsOpen} onClose={() => setSettingsOpen(false)} />
+      
+      <SearchModal 
+        open={searchOpen} 
+        onClose={() => setSearchOpen(false)} 
+        tree={tree}
+        onNavigate={(id) => {
+          void navigateToFolder(id);
+        }}
+      />
     </div>
   );
 }
+
