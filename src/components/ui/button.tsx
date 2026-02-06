@@ -36,6 +36,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
         className={cn(
           "inline-flex items-center justify-center gap-2 font-semibold",
           "transition-all duration-200",
+          "hover:cursor-pointer",
           "active:translate-y-px",
           "focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background",
           "disabled:opacity-50 disabled:pointer-events-none disabled:shadow-none disabled:transform-none",
