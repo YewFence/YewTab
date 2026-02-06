@@ -1,6 +1,7 @@
 import SearchBar from "./search-bar";
 import { Button } from "@/components/ui/button";
 import { IconEdit, IconSettings } from "@/newtab/settings/icons";
+import { Search } from "lucide-react";
 
 type AppHeaderProps = {
   offline: boolean;
@@ -8,6 +9,7 @@ type AppHeaderProps = {
   onEditModeToggle: () => void;
   onSettingsOpen: () => void;
   onCreateFolder: () => void;
+  onSearchOpen: () => void;
 };
 
 export default function AppHeader({
@@ -15,7 +17,8 @@ export default function AppHeader({
   editMode,
   onEditModeToggle,
   onSettingsOpen,
-  onCreateFolder
+  onCreateFolder,
+  onSearchOpen
 }: AppHeaderProps) {
   return (
     <header className="flex items-center justify-between gap-6 mb-10 flex-wrap">
@@ -36,6 +39,15 @@ export default function AppHeader({
             离线快照
           </span>
         )}
+        <Button
+          variant="secondary"
+          className="h-10 w-10 px-0"
+          aria-label="搜索书签"
+          onClick={onSearchOpen}
+          title="搜索书签 (Ctrl+K)"
+        >
+          <Search className="h-5 w-5" />
+        </Button>
         <Button
           variant="secondary"
           className={
@@ -65,3 +77,4 @@ export default function AppHeader({
     </header>
   );
 }
+
