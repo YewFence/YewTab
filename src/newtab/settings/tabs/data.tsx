@@ -6,6 +6,8 @@ import { cn } from "@/lib/utils";
 import SettingsSection from "@/newtab/settings/components/section";
 import SettingsRow from "@/newtab/settings/components/row";
 import { IconDownload, IconUpload } from "@/newtab/settings/icons";
+import FolderPickerDialog from "@/newtab/components/folder-picker-dialog";
+import { useBookmarks } from "@/hooks/use-bookmarks";
 import {
   exportBookmarksToHtml,
   exportYewTabBackup,
@@ -30,42 +32,36 @@ type FolderOption = {
   depth: number;
 };
 
-// 递归收集所有文件夹
-const collectFolders = (nodes: BookmarkNode[], depth: number = 0): FolderOption[] => {
-  const result: FolderOption[] = [];
-  for (const node of nodes) {
-    if (node.children) {
-      result.push({
-        id: node.id,
-        title: node.title || "未命名",
-        depth
-      });
-      result.push(...collectFolders(node.children, depth + 1));
-    }
-  }
-  return result;
-};
-
 export default function DataTab() {
   // 书签数据
   const [bookmarks, setBookmarks] = useState<BookmarkNode[]>([]);
-  const [folders, setFolders] = useState<FolderOption[]>([]);
-
+  
   // 导出状态
   const [exportFormat, setExportFormat] = useState<ExportFormat>("html");
   const [exportRootId, setExportRootId] = useState<string>("");
+  const [exportRootLabel, setExportRootLabel] = useState<string>("全部书签");
   const [exporting, setExporting] = useState(false);
   const [exportError, setExportError] = useState<string | null>(null);
   const [exportSuccess, setExportSuccess] = useState<string | null>(null);
+  
+  // 导出 Dialog
+  const [exportPickerOpen, setExportPickerOpen] = useState(false);
 
   // 导入状态
-  const [importTargetId, setImportTargetId] = useState<string>("1");
+  const [importTargetId, setImportTargetId] = useState<string>("1"); // 默认为书签栏
+  const [importTargetLabel, setImportTargetLabel] = useState<string>("书签栏");
   const [importing, setImporting] = useState(false);
   const [importError, setImportError] = useState<string | null>(null);
   const [importSuccess, setImportSuccess] = useState<string | null>(null);
+  
+  // 导入 Dialog
+  const [importPickerOpen, setImportPickerOpen] = useState(false);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const initializedRef = useRef(false);
+  
+  // 使用 hooks 获取书签树
+  const { tree } = useBookmarks();
 
   // 加载书签数据
   useEffect(() => {
@@ -76,16 +72,11 @@ export default function DataTab() {
       const snapshot = await readBookmarkSnapshot();
       if (snapshot?.tree) {
         setBookmarks(snapshot.tree);
-        // 收集所有文件夹
-        const allFolders = collectFolders(snapshot.tree);
-        setFolders(allFolders);
-        // 默认导入到书签栏（如果还是初始值）
-        if (allFolders.length > 0) {
-          setImportTargetId((prev) => prev === "1" && allFolders[0].id ? allFolders[0].id : prev);
-        }
+        // 如果需要基于 tree 计算默认值
       }
     })();
   }, []);
+
 
   // 导出处理
   const handleExport = useCallback(async () => {
@@ -195,21 +186,38 @@ export default function DataTab() {
     }
   }, [handleImport]);
 
-  // 文件夹选择器选项
-  const folderOptions = useMemo(() => {
-    return [
-      { id: "", title: "全部书签", depth: 0 },
-      ...folders
-    ];
-  }, [folders]);
+  const onExportFolderSelect = (id: string, title: string) => {
+    setExportRootId(id);
+    setExportRootLabel(title);
+  };
 
-  const importFolderOptions = useMemo(() => {
-    // 导入目标不包括"全部"选项，默认用书签栏
-    return folders.length > 0 ? folders : [{ id: "1", title: "书签栏", depth: 0 }];
-  }, [folders]);
+  const onImportFolderSelect = (id: string, title: string) => {
+    setImportTargetId(id);
+    setImportTargetLabel(title);
+  };
 
   return (
     <div className="space-y-4">
+      {/* 导出文件夹选择器 */}
+      <FolderPickerDialog
+        open={exportPickerOpen}
+        onClose={() => setExportPickerOpen(false)}
+        onConfirm={onExportFolderSelect}
+        tree={tree}
+        initialSelectedId={exportRootId || "0"} // 默认为 "0" (全部书签)
+        title="选择导出文件夹"
+      />
+
+      {/* 导入文件夹选择器 */}
+      <FolderPickerDialog
+        open={importPickerOpen}
+        onClose={() => setImportPickerOpen(false)}
+        onConfirm={onImportFolderSelect}
+        tree={tree}
+        initialSelectedId={importTargetId}
+        title="选择导入文件夹"
+      />
+
       {/* 导出区域 */}
       <SettingsSection title="导出" description="将书签导出为文件，方便备份或迁移到其他浏览器。">
         <div className="space-y-4">
@@ -271,25 +279,31 @@ export default function DataTab() {
               label="导出范围"
               description="选择要导出的文件夹"
               control={
-                <select
-                  className={cn(
-                    "min-w-[200px] px-3 py-2 rounded-[14px]",
-                    "bg-glass-subtle border border-border-glass",
-                    "text-sm font-semibold text-ink",
-                    "focus:outline-none focus:ring-2 focus:ring-primary/30"
-                  )}
-                  value={exportRootId}
-                  onChange={(e) => setExportRootId(e.target.value)}
-                >
-                  {folderOptions.map((folder) => (
-                    <option key={folder.id} value={folder.id}>
-                      {"　".repeat(folder.depth)}{folder.title}
-                    </option>
-                  ))}
-                </select>
+                <div className="flex items-center gap-3">
+                  <div
+                    className={cn(
+                      "max-w-[240px] truncate",
+                      "text-sm font-semibold",
+                      "px-3 py-2 rounded-[14px]",
+                      "bg-glass-subtle border border-border-glass",
+                      "text-ink"
+                    )}
+                    title={exportRootLabel}
+                  >
+                    {exportRootLabel}
+                  </div>
+                  <Button
+                    variant="secondary"
+                    onClick={() => setExportPickerOpen(true)}
+                    disabled={exporting}
+                  >
+                    选择
+                  </Button>
+                </div>
               }
             />
           )}
+
 
           {/* 导出按钮 */}
           <div className="flex items-center gap-3 pt-2">
@@ -320,24 +334,30 @@ export default function DataTab() {
             label="目标文件夹"
             description="书签将导入到这个文件夹中"
             control={
-              <select
-                className={cn(
-                  "min-w-[200px] px-3 py-2 rounded-[14px]",
-                  "bg-glass-subtle border border-border-glass",
-                  "text-sm font-semibold text-ink",
-                  "focus:outline-none focus:ring-2 focus:ring-primary/30"
-                )}
-                value={importTargetId}
-                onChange={(e) => setImportTargetId(e.target.value)}
-              >
-                {importFolderOptions.map((folder) => (
-                  <option key={folder.id} value={folder.id}>
-                    {"　".repeat(folder.depth)}{folder.title}
-                  </option>
-                ))}
-              </select>
+              <div className="flex items-center gap-3">
+                <div
+                  className={cn(
+                    "max-w-[240px] truncate",
+                    "text-sm font-semibold",
+                    "px-3 py-2 rounded-[14px]",
+                    "bg-glass-subtle border border-border-glass",
+                    "text-ink"
+                  )}
+                  title={importTargetLabel}
+                >
+                  {importTargetLabel}
+                </div>
+                <Button
+                  variant="secondary"
+                  onClick={() => setImportPickerOpen(true)}
+                  disabled={importing}
+                >
+                  选择
+                </Button>
+              </div>
             }
           />
+
 
           {/* 导入按钮 */}
           <div className="flex items-center gap-3 pt-2">
