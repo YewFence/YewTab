@@ -14,3 +14,5 @@ export const STORAGE_KEYS = {
 } as const;
 
 export const SNAPSHOT_VERSION = 1;
+
+export const BACKUP_VERSION = 1;
