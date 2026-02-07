@@ -9,4 +9,8 @@ export type ContextMenuTarget =
       kind: "folder";
       id: string;
       title: string;
+    }
+  | {
+      kind: "background";
+      currentFolderId: string | null;
     };

@@ -17,6 +17,7 @@ type BookmarkCardProps = {
   sortableRef?: (node: HTMLDivElement | null) => void;
   sortableStyle?: CSSProperties;
   dndDragging?: boolean;
+  isInClipboard?: boolean;
 };
 
 export default function BookmarkCard({
@@ -29,7 +30,8 @@ export default function BookmarkCard({
   dragHandle,
   sortableRef,
   sortableStyle,
-  dndDragging = false
+  dndDragging = false,
+  isInClipboard = false
 }: BookmarkCardProps) {
   const reduceMotion = useReducedMotion();
   const layoutTransition: Transition = reduceMotion
@@ -99,7 +101,9 @@ export default function BookmarkCard({
           !dragHandle ? "group-hover:top-[-20%] group-hover:left-[-5%]" : null,
           "group-hover:shadow-card-hover group-hover:bg-glass-strong",
           "group-hover:backdrop-blur-[10px]",
-          dragHandle ? "cursor-grab active:cursor-grabbing" : "cursor-pointer"
+          dragHandle ? "cursor-grab active:cursor-grabbing" : "cursor-pointer",
+          // 剪切板视觉反馈
+          isInClipboard ? "opacity-50 border-dashed !border-2 !border-primary" : null
         )}
         type="button"
         onClick={(e) => {

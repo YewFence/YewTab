@@ -22,6 +22,7 @@ type FolderCardProps = {
   sortableRef?: (node: HTMLDivElement | null) => void;
   sortableStyle?: CSSProperties;
   dndDragging?: boolean;
+  isInClipboard?: boolean;
 
   // 新增 props：支持嵌套展开
   expandedStateTree?: Record<string, string[]>;  // 树形展开状态
@@ -46,6 +47,7 @@ export default function FolderCard({
   sortableRef,
   sortableStyle,
   dndDragging = false,
+  isInClipboard = false,
   expandedStateTree,
   parentFolderId,
   onFolderToggle,
@@ -133,7 +135,9 @@ export default function FolderCard({
           "transition-[background-color,box-shadow,border-color] duration-200",
           isOpen
             ? "relative inset-auto h-auto bg-glass-strong border-accent-blue shadow-[0_0_0_2px_rgba(47,128,237,0.2)]"
-            : "h-full hover:shadow-card-hover hover:bg-glass-strong"
+            : "h-full hover:shadow-card-hover hover:bg-glass-strong",
+          // 剪切板视觉反馈
+          isInClipboard && !isOpen ? "opacity-50 border-dashed !border-2 !border-primary" : null
         )}
       >
         {/* Closed view */}
