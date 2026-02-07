@@ -24,11 +24,12 @@ type FolderCardProps = {
   dndDragging?: boolean;
 
   // 新增 props：支持嵌套展开
-  expandedIds?: Set<string>;                 // 全局展开状态
-  onFolderToggle?: (id: string) => void;     // 切换子文件夹展开状态
-  maxDepth?: number;                         // 最大嵌套深度，默认 3
-  currentDepth?: number;                     // 当前嵌套深度，默认 0
-  clearFolderClickTimer?: () => void;        // 清除手势定时器（用于双击检测）
+  expandedStateTree?: Record<string, string[]>;  // 树形展开状态
+  parentFolderId?: string | null;                // 父文件夹ID,用于确定上下文
+  onFolderToggle?: (id: string) => void;         // 切换子文件夹展开状态
+  maxDepth?: number;                             // 最大嵌套深度，默认 3
+  currentDepth?: number;                         // 当前嵌套深度，默认 0
+  clearFolderClickTimer?: () => void;            // 清除手势定时器（用于双击检测）
 };
 
 export default function FolderCard({
@@ -45,7 +46,8 @@ export default function FolderCard({
   sortableRef,
   sortableStyle,
   dndDragging = false,
-  expandedIds,
+  expandedStateTree,
+  parentFolderId,
   onFolderToggle,
   maxDepth = 3,
   currentDepth = 0,
@@ -241,7 +243,8 @@ export default function FolderCard({
 
                 // 检查是否可以继续展开
                 const canExpand = currentDepth < maxDepth;
-                const isSubOpen = canExpand && (expandedIds?.has(node.id) ?? false);
+                // 从 expandedStateTree 中判断子文件夹是否展开
+                const isSubOpen = canExpand && (expandedStateTree?.[id]?.includes(node.id) ?? false);
 
                 return (
                   <FolderCard
@@ -257,7 +260,8 @@ export default function FolderCard({
                     onContextMenu={onContextMenu}
 
                     // 递归传递 props
-                    expandedIds={expandedIds}
+                    expandedStateTree={expandedStateTree}
+                    parentFolderId={id}  // 传递当前文件夹ID作为父上下文
                     onFolderToggle={onFolderToggle}
                     maxDepth={maxDepth}
                     currentDepth={currentDepth + 1}

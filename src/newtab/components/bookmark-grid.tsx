@@ -11,7 +11,7 @@ type BookmarkGridProps = {
   activeFolderId: string | null;
   currentNodes: BookmarkNode[];
   orderedIds: string[];
-  expandedIds: Set<string>;
+  expandedStateTree?: Record<string, string[]>;
   editMode: boolean;
   offline: boolean;
   parentIdForCurrentView: string;
@@ -30,7 +30,7 @@ export default function BookmarkGrid({
   activeFolderId,
   currentNodes,
   orderedIds,
-  expandedIds,
+  expandedStateTree,
   editMode,
   offline,
   parentIdForCurrentView,
@@ -100,17 +100,23 @@ export default function BookmarkGrid({
       key={`__sortable__:${activeFolderId ?? "root"}`}
       ids={orderedNodes.map((n) => n.id)}
       disabled={offline || !parentIdForCurrentView || !editMode}
-      disabledIds={expandedIds}
+      disabledIds={
+        expandedStateTree
+          ? new Set(expandedStateTree[activeFolderId ?? "__root__"] ?? [])
+          : new Set()
+      }
       onReorder={onReorder}
       render={({ id, dragHandle, setNodeRef, style, isDragging }) => {
         const node = byId.get(id);
         if (!node) {
           return null;
         }
-        const isExpanded = expandedIds.has(node.id);
 
         if (!node.url) {
           const childrenNodes = node.children ?? [];
+          const contextKey = activeFolderId ?? "__root__";
+          const isExpanded = expandedStateTree?.[contextKey]?.includes(node.id) ?? false;
+
           return (
             <FolderCard
               id={node.id}
@@ -131,7 +137,8 @@ export default function BookmarkGrid({
               dndDragging={isDragging}
 
               // 新增传递：支持嵌套展开
-              expandedIds={expandedIds}
+              expandedStateTree={expandedStateTree}
+              parentFolderId={activeFolderId}
               onFolderToggle={onFolderToggle}
               maxDepth={3}
               currentDepth={0}
