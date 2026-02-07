@@ -7,6 +7,7 @@ import { useGridColumns } from "@/hooks/use-grid-columns";
 import { useFolderNavigation } from "@/hooks/use-folder-navigation";
 import { useLayoutState } from "@/hooks/use-layout-state";
 import { useSortableOrder } from "@/hooks/use-sortable-order";
+import { useClipboard } from "@/hooks/use-clipboard";
 import { useContextMenuItems } from "./hooks/use-context-menu-items";
 import { getTopLevelNodes } from "./utils";
 import type { ContextMenuTarget } from "./types";
@@ -27,6 +28,7 @@ export default function App() {
   const { tree, offline, errorMessage, setErrorMessage } = useBookmarks();
   const { editMode, setEditMode } = useEditMode();
   const { contextMenu, openContextMenu, closeContextMenu } = useContextMenu();
+  const { clipboardItem, handleCut, handleCopy, handlePaste } = useClipboard(tree);
   useGridColumns(gridRef, [tree]);
 
   // 导航状态
@@ -72,11 +74,23 @@ export default function App() {
         e.preventDefault();
         setSearchOpen(true);
       }
+      // Ctrl+V to paste (unless typing in input)
+      if ((e.ctrlKey || e.metaKey) && e.key === "v" && !["INPUT", "TEXTAREA"].includes((e.target as HTMLElement).tagName)) {
+        e.preventDefault();
+        if (clipboardItem) {
+          const targetFolderId = activeFolderId ?? tree[0]?.id ?? "1";
+          void handlePaste(targetFolderId).then((result) => {
+            if (!result.success && result.error) {
+              alert(`粘贴失败: ${result.error}`);
+            }
+          });
+        }
+      }
     };
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, []);
+  }, [setSearchOpen, clipboardItem, handlePaste, activeFolderId, tree]);
 
   // 计算值
   const rootNodes = useMemo(() => getTopLevelNodes(tree), [tree]);
@@ -107,7 +121,12 @@ export default function App() {
     setEditTarget,
     setDeleteTarget,
     setEditServerError,
-    setDeleteServerError
+    setDeleteServerError,
+    tree,
+    clipboardItem,
+    handleCut,
+    handleCopy,
+    handlePaste
   });
 
   const openCreateFolderDialog = () => {
@@ -148,6 +167,8 @@ export default function App() {
       <section
         className="grid grid-cols-[repeat(auto-fill,minmax(220px,1fr))] gap-6 relative [grid-auto-flow:row_dense]"
         ref={gridRef}
+        data-yew-context="background"
+        data-yew-current-folder-id={activeFolderId ?? ""}
       >
         <BookmarkGrid
           activeFolderId={activeFolderId}
@@ -159,6 +180,7 @@ export default function App() {
           parentIdForCurrentView={parentIdForCurrentView}
           fullPath={fullPath}
           openInNewTab={layout.openInNewTab}
+          clipboardItem={clipboardItem}
           onReorder={handleReorder}
           onBackToParent={handleBackToParent}
           onFolderToggleGesture={handleFolderToggleGesture}

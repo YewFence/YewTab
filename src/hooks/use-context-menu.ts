@@ -35,17 +35,21 @@ export function useContextMenu() {
       const kind = el.dataset.yewContext;
       const id = el.dataset.yewId;
       const title = el.dataset.yewTitle ?? "";
-      if (!kind || !id) {
-        return;
-      }
 
       let ctxTarget: ContextMenuTarget | null = null;
       if (kind === "folder") {
+        if (!id) return;
         ctxTarget = { kind: "folder", id, title };
       } else if (kind === "bookmark") {
+        if (!id) return;
         const url = el.dataset.yewUrl ?? "";
         ctxTarget = { kind: "bookmark", id, title, url };
+      } else if (kind === "background") {
+        // 背景右键：用于粘贴到当前文件夹
+        const currentFolderId = el.dataset.yewCurrentFolderId ?? null;
+        ctxTarget = { kind: "background", currentFolderId };
       }
+      
       if (!ctxTarget) {
         return;
       }

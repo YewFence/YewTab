@@ -1,6 +1,7 @@
 import type { ReactNode, MouseEvent } from "react";
 import type { BookmarkNode } from "@/shared/types";
 import type { ContextMenuTarget } from "@/newtab/types";
+import type { ClipboardItem } from "@/hooks/use-clipboard";
 import { getCardTitle } from "@/newtab/utils";
 import BackCard from "./back-card";
 import BookmarkCard from "./bookmark-card";
@@ -17,6 +18,7 @@ type BookmarkGridProps = {
   parentIdForCurrentView: string;
   fullPath: BookmarkNode[];
   openInNewTab?: boolean;
+  clipboardItem: ClipboardItem | null;
   onReorder: (nextIds: string[]) => void;
   onBackToParent: () => void;
   onFolderToggleGesture: (id: string, isOpen: boolean) => void;
@@ -36,6 +38,7 @@ export default function BookmarkGrid({
   parentIdForCurrentView,
   fullPath,
   openInNewTab,
+  clipboardItem,
   onReorder,
   onBackToParent,
   onFolderToggleGesture,
@@ -135,6 +138,7 @@ export default function BookmarkGrid({
               sortableRef={setNodeRef as unknown as (node: HTMLDivElement | null) => void}
               sortableStyle={style}
               dndDragging={isDragging}
+              isInClipboard={clipboardItem?.id === node.id}
 
               // 新增传递：支持嵌套展开
               expandedStateTree={expandedStateTree}
@@ -159,6 +163,7 @@ export default function BookmarkGrid({
             sortableRef={setNodeRef as unknown as (node: HTMLDivElement | null) => void}
             sortableStyle={style}
             dndDragging={isDragging}
+            isInClipboard={clipboardItem?.id === node.id}
           />
         );
       }}
