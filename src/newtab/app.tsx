@@ -47,7 +47,8 @@ export default function App() {
     handleFolderToggleGesture,
     handleSubFolderOpen,
     handleBackToParent,
-    clearFolderClickTimer
+    clearFolderClickTimer,
+    handleFolderClick  // 新增解构
   } = useFolderNavigation(tree, layout, setLayout, activeFolderId, setActiveFolderId);
 
   // 对话框状态
@@ -165,6 +166,7 @@ export default function App() {
           onSubFolderOpen={handleSubFolderOpen}
           onContextMenu={openContextMenu}
           clearFolderClickTimer={clearFolderClickTimer}
+          onFolderToggle={handleFolderClick}  // 新增传递
         />
       </section>
 
