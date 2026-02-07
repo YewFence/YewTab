@@ -25,7 +25,7 @@ type BookmarkGridProps = {
   onSubFolderOpen: (id: string) => void;
   onContextMenu: (event: MouseEvent, target: ContextMenuTarget) => void;
   clearFolderClickTimer: () => void;
-  onFolderToggle: (id: string) => void;  // 新增：切换展开状态（不带延迟）
+  onFolderToggle: (id: string, parentId: string | null) => void;  // 切换展开状态（传递父文件夹ID）
 };
 
 export default function BookmarkGrid({
