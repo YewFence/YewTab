@@ -183,7 +183,9 @@ export async function importYewTabBackup(
           pinnedIds: [], // 清空固定书签 ID
           lastOpenFolder: null,
           startupFolderId: null, // 清空启动文件夹
-          expandedFolderIds: [] // 清空展开状态
+          expandedFolderIds: [], // 清空旧字段
+          expandedStateTree: {}, // 清空新字段
+          expandedStateVersion: 2
         };
         await writeLayoutState(cleanLayoutState);
       }

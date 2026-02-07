@@ -38,7 +38,6 @@ export default function App() {
   const { layout, setLayout, layoutRef } = useLayoutState(tree, activeFolderId, setActiveFolderId, setErrorMessage);
 
   const {
-    expandedIds,
     currentFolder,
     currentNodes,
     fullPath,
@@ -154,7 +153,7 @@ export default function App() {
           activeFolderId={activeFolderId}
           currentNodes={currentNodes}
           orderedIds={orderedIds}
-          expandedIds={expandedIds}
+          expandedStateTree={layout.expandedStateTree}
           editMode={editMode}
           offline={offline}
           parentIdForCurrentView={parentIdForCurrentView}

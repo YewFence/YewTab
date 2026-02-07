@@ -14,7 +14,7 @@ export function useLayoutState(
   layoutRef.current = layout;
 
   useEffect(() => {
-    void readLayoutState().then((state) => {
+    void readLayoutState(tree).then((state) => {
       setLayout(state);
       if (state.startupFolderId) {
         setActiveFolderId(state.startupFolderId);
@@ -24,7 +24,7 @@ export function useLayoutState(
         setActiveFolderId(state.lastOpenFolder);
       }
     });
-  }, [setActiveFolderId]);
+  }, [setActiveFolderId, tree]);
 
   useEffect(() => {
     if (!tree.length) {
