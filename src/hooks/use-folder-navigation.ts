@@ -1,4 +1,4 @@
-import { useState, useCallback, useMemo, useRef, useEffect } from "react";
+import { useCallback, useMemo, useRef, useEffect } from "react";
 import type { BookmarkNode, LayoutState } from "@/shared/types";
 import { writeLayoutState } from "@/lib/storage";
 import { findNodeById, getTopLevelNodes, getCardTitle, findPathInTree } from "@/newtab/utils";
@@ -77,14 +77,15 @@ export function useFolderNavigation(
     [clearFolderClickTimer, setLayout, setActiveFolderId]
   );
 
-  const handleFolderClick = useCallback((id: string) => {
+  const handleFolderClick = useCallback((id: string, parentId: string | null) => {
     if (!layout.keepFolderExpansion) {
       return;  // 未开启持久化,不处理
     }
 
     setLayout(currentLayout => {
       const expandedStateTree = currentLayout.expandedStateTree ?? {};
-      const contextKey = activeFolderId ?? "__root__";
+      // 使用传入的 parentId 作为上下文，null 转为 "__root__"
+      const contextKey = parentId ?? "__root__";
       const currentExpandedList = expandedStateTree[contextKey] ?? [];
 
       let nextExpandedList: string[];
@@ -109,15 +110,16 @@ export function useFolderNavigation(
       void writeLayoutState(newLayout);
       return newLayout;
     });
-  }, [layout.keepFolderExpansion, activeFolderId, setLayout]);
+  }, [layout.keepFolderExpansion, setLayout]);
 
-  const handleFolderToggleGesture = useCallback((id: string, isOpen: boolean) => {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const handleFolderToggleGesture = useCallback((id: string, _isOpen: boolean) => {
     clearFolderClickTimer();
     folderClickTimerRef.current = setTimeout(() => {
       folderClickTimerRef.current = null;
-      handleFolderClick(id);
+      handleFolderClick(id, activeFolderId ?? null);
     }, 220);
-  }, [clearFolderClickTimer, handleFolderClick]);
+  }, [clearFolderClickTimer, handleFolderClick, activeFolderId]);
 
   const handleSubFolderOpen = useCallback(async (id: string) => {
     await navigateToFolder(id);

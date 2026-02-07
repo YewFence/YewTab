@@ -27,7 +27,7 @@ type FolderCardProps = {
   // 新增 props：支持嵌套展开
   expandedStateTree?: Record<string, string[]>;  // 树形展开状态
   parentFolderId?: string | null;                // 父文件夹ID,用于确定上下文
-  onFolderToggle?: (id: string) => void;         // 切换子文件夹展开状态
+  onFolderToggle?: (id: string, parentId: string | null) => void;  // 切换子文件夹展开状态（传递父文件夹ID）
   maxDepth?: number;                             // 最大嵌套深度，默认 3
   currentDepth?: number;                         // 当前嵌套深度，默认 0
   clearFolderClickTimer?: () => void;            // 清除手势定时器（用于双击检测）
@@ -49,7 +49,7 @@ export default function FolderCard({
   dndDragging = false,
   isInClipboard = false,
   expandedStateTree,
-  parentFolderId,
+  // parentFolderId,
   onFolderToggle,
   maxDepth = 3,
   currentDepth = 0,
@@ -81,7 +81,7 @@ export default function FolderCard({
     subFolderClickTimerRef.current = setTimeout(() => {
       subFolderClickTimerRef.current = null;
       if (canExpand) {
-        onFolderToggle?.(subId);  // 展开/收起
+        onFolderToggle?.(subId, id);  // 展开/收起，传递父文件夹 ID
       } else {
         onSubFolderClick?.(subId);  // 到达深度上限，导航进入
       }
