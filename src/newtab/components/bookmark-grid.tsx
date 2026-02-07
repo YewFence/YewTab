@@ -23,6 +23,7 @@ type BookmarkGridProps = {
   onSubFolderOpen: (id: string) => void;
   onContextMenu: (event: MouseEvent, target: ContextMenuTarget) => void;
   clearFolderClickTimer: () => void;
+  onFolderToggle: (id: string) => void;  // 新增：切换展开状态（不带延迟）
 };
 
 export default function BookmarkGrid({
@@ -40,7 +41,8 @@ export default function BookmarkGrid({
   onFolderToggleGesture,
   onSubFolderOpen,
   onContextMenu,
-  clearFolderClickTimer
+  clearFolderClickTimer,
+  onFolderToggle
 }: BookmarkGridProps) {
   const items: ReactNode[] = [];
 
@@ -127,6 +129,13 @@ export default function BookmarkGrid({
               sortableRef={setNodeRef as unknown as (node: HTMLDivElement | null) => void}
               sortableStyle={style}
               dndDragging={isDragging}
+
+              // 新增传递：支持嵌套展开
+              expandedIds={expandedIds}
+              onFolderToggle={onFolderToggle}
+              maxDepth={3}
+              currentDepth={0}
+              clearFolderClickTimer={clearFolderClickTimer}
             />
           );
         }

@@ -1,4 +1,5 @@
 import type { MouseEvent } from "react";
+import { useRef, useEffect } from "react";
 import { motion, useReducedMotion, type Transition } from "framer-motion";
 import { cn } from "@/lib/utils";
 import type { BookmarkNode } from "../../shared/types";
@@ -21,6 +22,13 @@ type FolderCardProps = {
   sortableRef?: (node: HTMLDivElement | null) => void;
   sortableStyle?: CSSProperties;
   dndDragging?: boolean;
+
+  // 新增 props：支持嵌套展开
+  expandedIds?: Set<string>;                 // 全局展开状态
+  onFolderToggle?: (id: string) => void;     // 切换子文件夹展开状态
+  maxDepth?: number;                         // 最大嵌套深度，默认 3
+  currentDepth?: number;                     // 当前嵌套深度，默认 0
+  clearFolderClickTimer?: () => void;        // 清除手势定时器（用于双击检测）
 };
 
 export default function FolderCard({
@@ -36,12 +44,54 @@ export default function FolderCard({
   dragHandle,
   sortableRef,
   sortableStyle,
-  dndDragging = false
+  dndDragging = false,
+  expandedIds,
+  onFolderToggle,
+  maxDepth = 3,
+  currentDepth = 0,
+  clearFolderClickTimer
 }: FolderCardProps) {
   const reduceMotion = useReducedMotion();
   const layoutTransition: Transition = reduceMotion
     ? { duration: 0 }
     : { duration: 0.28, ease: [0.2, 0, 0, 1] as const };
+
+  // 子文件夹手势定时器
+  const subFolderClickTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // 清理定时器
+  useEffect(() => {
+    return () => {
+      if (subFolderClickTimerRef.current) {
+        clearTimeout(subFolderClickTimerRef.current);
+        subFolderClickTimerRef.current = null;
+      }
+    };
+  }, []);
+
+  // 子文件夹单击处理（220ms 延迟）
+  const handleSubFolderSingleClick = (subId: string, canExpand: boolean) => {
+    if (subFolderClickTimerRef.current) {
+      clearTimeout(subFolderClickTimerRef.current);
+    }
+    subFolderClickTimerRef.current = setTimeout(() => {
+      subFolderClickTimerRef.current = null;
+      if (canExpand) {
+        onFolderToggle?.(subId);  // 展开/收起
+      } else {
+        onSubFolderClick?.(subId);  // 到达深度上限，导航进入
+      }
+    }, 220);
+  };
+
+  // 子文件夹双击处理
+  const handleSubFolderDoubleClick = (subId: string) => {
+    if (subFolderClickTimerRef.current) {
+      clearTimeout(subFolderClickTimerRef.current);
+      subFolderClickTimerRef.current = null;
+    }
+    onSubFolderClick?.(subId);  // 双击始终导航
+  };
 
   const cardListeners = dragHandle
     ? {
@@ -188,18 +238,30 @@ export default function FolderCard({
               // Empty folder has no children, so classify by URL.
               if (!node.url) {
                 const subChildren = node.children ?? [];
+
+                // 检查是否可以继续展开
+                const canExpand = currentDepth < maxDepth;
+                const isSubOpen = canExpand && (expandedIds?.has(node.id) ?? false);
+
                 return (
                   <FolderCard
                     key={node.id}
                     id={node.id}
                     title={node.title || "未命名"}
                     count={subChildren.length}
-                    isOpen={false}
-                    onToggle={() => onSubFolderClick?.(node.id)}
-                    onDoubleClick={() => onSubFolderClick?.(node.id)}
+                    isOpen={isSubOpen}
+                    onToggle={() => handleSubFolderSingleClick(node.id, canExpand)}
+                    onDoubleClick={() => handleSubFolderDoubleClick(node.id)}
                     childrenNodes={subChildren}
                     onSubFolderClick={onSubFolderClick}
                     onContextMenu={onContextMenu}
+
+                    // 递归传递 props
+                    expandedIds={expandedIds}
+                    onFolderToggle={onFolderToggle}
+                    maxDepth={maxDepth}
+                    currentDepth={currentDepth + 1}
+                    clearFolderClickTimer={clearFolderClickTimer}
                   />
                 );
               }

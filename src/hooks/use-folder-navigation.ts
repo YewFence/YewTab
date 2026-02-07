@@ -90,31 +90,27 @@ export function useFolderNavigation(
     setExpandedIds(prev => {
       const next = new Set(prev);
       if (next.has(id)) {
-        next.delete(id);
+        // 收起：同时级联收起所有子孙文件夹
+        const node = findNodeById(rootNodes, id);
+        if (node) {
+          const removeDescendants = (n: BookmarkNode) => {
+            next.delete(n.id);
+            for (const child of n.children ?? []) {
+              if (!child.url) {  // 只处理文件夹节点
+                removeDescendants(child);
+              }
+            }
+          };
+          removeDescendants(node);
+        }
       } else {
+        // 展开：只添加当前节点
         next.add(id);
       }
 
       // 如果开启了持久化，同步保存到 layout
       if (layout.keepFolderExpansion) {
-        // 使用 next 而不是 prev 来确保最新状态
-        // 注意：这里我们不能直接调用 setLayout，因为这会导致重渲染循环或依赖问题
-        // 但我们需要更新 storage。
-        // 为了保持 UI 响应快，我们先更新 storage，再更新 React 状态（如果需要）
-        // 这里选择只更新 storage 和 layout 状态。
-        
         const nextArray = Array.from(next);
-        
-        // 异步更新 LayoutState，避免阻塞交互
-        // 使用 setTimeout 将其放入下一个 tick，或者直接更新
-        // 为了安全起见，我们在 setExpandedIds 外部调用 setLayout
-        // 但 setExpandedIds 是 reducer 风格。
-        // 所以我们可以在外部用 useEffect 监听 expandedIds 变化？
-        // 不，那样会太频繁。最好在这里直接触发。
-        
-        // 这里的闭包问题：layout 可能是旧的。
-        // 但我们只需要更新 expandedFolderIds 字段。
-        
         setLayout(currentLayout => {
           const newLayout = { ...currentLayout, expandedFolderIds: nextArray };
           void writeLayoutState(newLayout);
@@ -124,7 +120,7 @@ export function useFolderNavigation(
 
       return next;
     });
-  }, [layout.keepFolderExpansion, setLayout]);
+  }, [layout.keepFolderExpansion, setLayout, rootNodes]);
 
   const handleFolderToggleGesture = useCallback((id: string, isOpen: boolean) => {
     clearFolderClickTimer();
