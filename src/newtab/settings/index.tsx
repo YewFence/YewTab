@@ -3,9 +3,10 @@ import type { SettingsTabDefinition, SettingsTabKey } from "@/newtab/settings/ty
 import { AnimatePresence, motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
-import { IconClose, IconGeneral, IconInfo, IconPalette } from "@/newtab/settings/icons";
+import { IconClose, IconData, IconGeneral, IconInfo, IconPalette } from "@/newtab/settings/icons";
 import GeneralTab from "@/newtab/settings/tabs/general";
 import AppearanceTab from "@/newtab/settings/tabs/appearance";
+import DataTab from "@/newtab/settings/tabs/data";
 import AboutTab from "@/newtab/settings/tabs/about";
 
 export type SettingsModalProps = {
@@ -31,6 +32,13 @@ export default function SettingsModal({ open, onClose, tabs, initialTabKey }: Se
         description: "主题与展示方式",
         icon: <IconPalette className="h-4 w-4" />,
         render: () => <AppearanceTab />
+      },
+      {
+        key: "data",
+        title: "数据",
+        description: "导入与导出",
+        icon: <IconData className="h-4 w-4" />,
+        render: () => <DataTab />
       },
       {
         key: "about",

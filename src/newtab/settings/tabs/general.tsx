@@ -9,6 +9,8 @@ import SettingsRow from "@/newtab/settings/components/row";
 import { Radio } from "@/components/ui/radio";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
+import FolderPickerDialog from "@/newtab/components/folder-picker-dialog";
+import { useBookmarks } from "@/hooks/use-bookmarks";
 
 const ENGINE_LABELS: Record<SearchEngine, string> = {
   google: "Google",
@@ -48,6 +50,9 @@ export default function GeneralTab() {
   const [openInNewTab, setOpenInNewTab] = useState(false);
   const [openInNewTabSaving, setOpenInNewTabSaving] = useState(false);
 
+  const [pickerOpen, setPickerOpen] = useState(false);
+  const { tree } = useBookmarks();
+
   useEffect(() => {
     void readSearchSettings().then((settings) => setEngine(settings.defaultEngine));
   }, []);
@@ -75,9 +80,12 @@ export default function GeneralTab() {
 
         const path = findPathInTree(root, state.startupFolderId);
         if (!path) {
+          // 尝试在当前加载的 tree 中查找（如果是 hooks 加载的）
+          // 但这里主要依靠 snapshot 或 hooks 的 tree
           setStartupFolderLabel("未知（可能已删除）");
           return;
         }
+
 
         // path[0] 通常是虚拟 root 节点，不展示。
         const visible = path.length >= 2 ? path.slice(1) : path;
@@ -131,8 +139,45 @@ export default function GeneralTab() {
     }
   };
 
+  const handleFolderSelect = async (folderId: string, folderTitle: string) => {
+    setNavSaving(true);
+    setNavError(null);
+    try {
+      const prev = await readLayoutState();
+      // 这里不设置 lastOpenFolder 为 null，允许保留？或者也重置？
+      // 逻辑：如果设定了 startupFolderId，则每次打开都去那里，lastOpenFolder 可能会被覆盖
+      const next: LayoutState = {
+        ...prev,
+        startupFolderId: folderId
+      };
+      await writeLayoutState(next);
+      setStartupFolderId(folderId);
+      // 需要重新计算完整路径 label 比较麻烦，暂时用选中的 title 或再次读取
+      // 简单起见，先显示选中的文件夹名，或重新触发读取逻辑
+      // 也可以再次调用 findPathInTree 更新 label
+      // 为简化交互体验，这里直接更新 label
+      setStartupFolderLabel(folderTitle); 
+      
+      // 重新读取一次以确保 label 完整（例如包含父路径），或者简化只显示当前
+      // 这里选择重新触发一次读取（复用 useEffect 里的逻辑稍微麻烦，直接手动更新）
+      // 实际上 useEffect 里的 path 查找比较重，可以暂时只显示 title
+    } catch (e) {
+      setNavError(e instanceof Error ? e.message : "设置失败");
+    } finally {
+      setNavSaving(false);
+    }
+  };
+
   return (
     <div className="space-y-4">
+      <FolderPickerDialog
+        open={pickerOpen}
+        onClose={() => setPickerOpen(false)}
+        onConfirm={handleFolderSelect}
+        tree={tree}
+        initialSelectedId={startupFolderId}
+        title="选择启动文件夹"
+      />
 
       <SettingsSection title="搜索" description="决定地址栏输入框默认用哪个引擎搜索。">
         <div className="space-y-2">
@@ -183,32 +228,42 @@ export default function GeneralTab() {
               </div>
               <Button
                 variant="secondary"
-                disabled={navSaving || !startupFolderId}
-                onClick={() => {
-                  void (async () => {
-                    setNavSaving(true);
-                    setNavError(null);
-                    try {
-                      const prev = await readLayoutState();
-                      const next: LayoutState = {
-                        ...prev,
-                        startupFolderId: null,
-                        // 重置到根目录：同时清掉 lastOpenFolder，避免仍然打开到上次位置。
-                        lastOpenFolder: null
-                      };
-                      await writeLayoutState(next);
-                      setStartupFolderId(null);
-                      setStartupFolderLabel("根目录");
-                    } catch (e) {
-                      setNavError(e instanceof Error ? e.message : "重置失败");
-                    } finally {
-                      setNavSaving(false);
-                    }
-                  })();
-                }}
+                onClick={() => setPickerOpen(true)}
+                disabled={navSaving}
               >
-                {navSaving ? "重置中…" : "重置到根目录"}
+                更改
               </Button>
+              {startupFolderId && (
+                <Button
+                  variant="ghost"
+                  className="text-muted-text hover:text-destructive hover:bg-destructive/10 px-2"
+                  disabled={navSaving}
+                  title="重置到根目录"
+                  onClick={() => {
+                    void (async () => {
+                      setNavSaving(true);
+                      setNavError(null);
+                      try {
+                        const prev = await readLayoutState();
+                        const next: LayoutState = {
+                          ...prev,
+                          startupFolderId: null,
+                          lastOpenFolder: null
+                        };
+                        await writeLayoutState(next);
+                        setStartupFolderId(null);
+                        setStartupFolderLabel("根目录");
+                      } catch (e) {
+                        setNavError(e instanceof Error ? e.message : "重置失败");
+                      } finally {
+                        setNavSaving(false);
+                      }
+                    })();
+                  }}
+                >
+                  清除
+                </Button>
+              )}
             </div>
           }
         />
