@@ -139,6 +139,7 @@ export default function BookmarkGrid({
               sortableStyle={style}
               dndDragging={isDragging}
               isInClipboard={clipboardItem?.id === node.id}
+              clipboardOperation={clipboardItem?.id === node.id ? clipboardItem.operation : null}
 
               // 新增传递：支持嵌套展开
               expandedStateTree={expandedStateTree}
@@ -164,6 +165,7 @@ export default function BookmarkGrid({
             sortableStyle={style}
             dndDragging={isDragging}
             isInClipboard={clipboardItem?.id === node.id}
+            clipboardOperation={clipboardItem?.id === node.id ? clipboardItem.operation : null}
           />
         );
       }}

@@ -2,6 +2,7 @@ import type { MouseEvent } from "react";
 import { useRef, useEffect } from "react";
 import { motion, useReducedMotion, type Transition } from "framer-motion";
 import { cn } from "@/lib/utils";
+import type { ClipboardOperation } from "@/hooks/use-clipboard";
 import type { BookmarkNode } from "../../shared/types";
 import BookmarkCard from "./bookmark-card";
 import type { ContextMenuTarget } from "../types";
@@ -23,6 +24,7 @@ type FolderCardProps = {
   sortableStyle?: CSSProperties;
   dndDragging?: boolean;
   isInClipboard?: boolean;
+  clipboardOperation?: ClipboardOperation | null;
 
   // 新增 props：支持嵌套展开
   expandedStateTree?: Record<string, string[]>;  // 树形展开状态
@@ -48,6 +50,7 @@ export default function FolderCard({
   sortableStyle,
   dndDragging = false,
   isInClipboard = false,
+  clipboardOperation = null,
   expandedStateTree,
   // parentFolderId,
   onFolderToggle,
@@ -104,6 +107,14 @@ export default function FolderCard({
       }
     : null;
 
+  const clipboardStyle = !isOpen && isInClipboard
+    ? clipboardOperation === "cut"
+      ? "opacity-50 border-dashed !border-2 !border-primary"
+      : clipboardOperation === "copy"
+        ? "border-dashed !border-2 !border-primary"
+        : null
+    : null;
+
   return (
     <motion.div
       className={cn(
@@ -137,7 +148,7 @@ export default function FolderCard({
             ? "relative inset-auto h-auto bg-glass-strong border-accent-blue shadow-[0_0_0_2px_rgba(47,128,237,0.2)]"
             : "h-full hover:shadow-card-hover hover:bg-glass-strong",
           // 剪切板视觉反馈
-          isInClipboard && !isOpen ? "opacity-50 border-dashed !border-2 !border-primary" : null
+          clipboardStyle
         )}
       >
         {/* Closed view */}
