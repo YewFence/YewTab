@@ -40,7 +40,13 @@ export type LayoutState = {
   startupFolderId: string | null;
   // 文件夹展开状态持久化
   keepFolderExpansion?: boolean;
+  // 旧版本字段（保留用于数据迁移）
   expandedFolderIds?: string[];
+  // 新版本字段：树形展开状态存储
+  // key: 文件夹ID（根目录用"__root__"）, value: 该文件夹下已展开的子孙文件夹ID数组
+  expandedStateTree?: Record<string, string[]>;
+  // 版本标记（用于迁移检测）: 1=旧版本（数组）, 2=新版本（树形）
+  expandedStateVersion?: 1 | 2;
   // 打开方式：是否在新标签页打开（默认 false）
   openInNewTab?: boolean;
 };

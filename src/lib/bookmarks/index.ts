@@ -108,3 +108,71 @@ export function subscribeBookmarkChanges(handler: BookmarkChangeHandler): () => 
     chromeApi.bookmarks.onMoved.removeListener(onMoved);
   };
 }
+
+/**
+ * 递归复制书签树（用于复制文件夹及其所有子项）
+ * @param sourceId 源节点ID
+ * @param targetParentId 目标父节点ID
+ * @param targetIndex 目标位置索引（可选）
+ * @returns 新创建的根节点ID
+ */
+export async function copyBookmarkTree(
+  sourceId: string,
+  targetParentId: string,
+  targetIndex?: number
+): Promise<string> {
+  // 获取源节点的完整子树
+  const sourceNodes = await chromeApi.bookmarks.getSubTree(sourceId);
+  const sourceNode = sourceNodes[0];
+
+  if (!sourceNode) {
+    throw new Error("源节点不存在");
+  }
+
+  // 递归复制节点
+  async function copyNode(node: BookmarkNode, parentId: string, index?: number): Promise<string> {
+    // 创建当前节点
+    const newNode = await chromeApi.bookmarks.create({
+      parentId,
+      title: node.title,
+      url: node.url, // 书签有url，文件夹url为undefined
+      index
+    });
+
+    // 如果是文件夹，递归复制所有子节点
+    if (node.children && node.children.length > 0) {
+      for (let i = 0; i < node.children.length; i++) {
+        await copyNode(node.children[i], newNode.id, i);
+      }
+    }
+
+    return newNode.id;
+  }
+
+  return copyNode(sourceNode, targetParentId, targetIndex);
+}
+
+/**
+ * 查找指定节点的所有祖先节点ID
+ * @param tree 书签树
+ * @param targetId 目标节点ID
+ * @returns 祖先节点ID数组（从根到直接父节点）
+ */
+export function findAncestors(tree: BookmarkNode[], targetId: string): string[] {
+  function findPath(nodes: BookmarkNode[], path: string[]): string[] | null {
+    for (const node of nodes) {
+      if (node.id === targetId) {
+        return path;
+      }
+      if (node.children) {
+        const result = findPath(node.children, [...path, node.id]);
+        if (result) {
+          return result;
+        }
+      }
+    }
+    return null;
+  }
+
+  return findPath(tree, []) ?? [];
+}
