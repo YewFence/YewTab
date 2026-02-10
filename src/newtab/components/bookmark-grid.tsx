@@ -138,6 +138,7 @@ export default function BookmarkGrid({
               sortableRef={setNodeRef as unknown as (node: HTMLDivElement | null) => void}
               sortableStyle={style}
               dndDragging={isDragging}
+              clipboardItem={clipboardItem}
               isInClipboard={clipboardItem?.id === node.id}
               clipboardOperation={clipboardItem?.id === node.id ? clipboardItem.operation : null}
 
