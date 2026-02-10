@@ -1,6 +1,7 @@
 import type { ReactNode, MouseEvent } from "react";
 import type { BookmarkNode } from "@/shared/types";
 import type { ContextMenuTarget } from "@/newtab/types";
+import type { ClipboardItem } from "@/hooks/use-clipboard";
 import { getCardTitle } from "@/newtab/utils";
 import BackCard from "./back-card";
 import BookmarkCard from "./bookmark-card";
@@ -11,36 +12,40 @@ type BookmarkGridProps = {
   activeFolderId: string | null;
   currentNodes: BookmarkNode[];
   orderedIds: string[];
-  expandedIds: Set<string>;
+  expandedStateTree?: Record<string, string[]>;
   editMode: boolean;
   offline: boolean;
   parentIdForCurrentView: string;
   fullPath: BookmarkNode[];
   openInNewTab?: boolean;
+  clipboardItem: ClipboardItem | null;
   onReorder: (nextIds: string[]) => void;
   onBackToParent: () => void;
   onFolderToggleGesture: (id: string, isOpen: boolean) => void;
   onSubFolderOpen: (id: string) => void;
   onContextMenu: (event: MouseEvent, target: ContextMenuTarget) => void;
   clearFolderClickTimer: () => void;
+  onFolderToggle: (id: string, parentId: string | null) => void;  // 切换展开状态（传递父文件夹ID）
 };
 
 export default function BookmarkGrid({
   activeFolderId,
   currentNodes,
   orderedIds,
-  expandedIds,
+  expandedStateTree,
   editMode,
   offline,
   parentIdForCurrentView,
   fullPath,
   openInNewTab,
+  clipboardItem,
   onReorder,
   onBackToParent,
   onFolderToggleGesture,
   onSubFolderOpen,
   onContextMenu,
-  clearFolderClickTimer
+  clearFolderClickTimer,
+  onFolderToggle
 }: BookmarkGridProps) {
   const items: ReactNode[] = [];
 
@@ -98,17 +103,23 @@ export default function BookmarkGrid({
       key={`__sortable__:${activeFolderId ?? "root"}`}
       ids={orderedNodes.map((n) => n.id)}
       disabled={offline || !parentIdForCurrentView || !editMode}
-      disabledIds={expandedIds}
+      disabledIds={
+        expandedStateTree
+          ? new Set(expandedStateTree[activeFolderId ?? "__root__"] ?? [])
+          : new Set()
+      }
       onReorder={onReorder}
       render={({ id, dragHandle, setNodeRef, style, isDragging }) => {
         const node = byId.get(id);
         if (!node) {
           return null;
         }
-        const isExpanded = expandedIds.has(node.id);
 
         if (!node.url) {
           const childrenNodes = node.children ?? [];
+          const contextKey = activeFolderId ?? "__root__";
+          const isExpanded = expandedStateTree?.[contextKey]?.includes(node.id) ?? false;
+
           return (
             <FolderCard
               id={node.id}
@@ -127,6 +138,17 @@ export default function BookmarkGrid({
               sortableRef={setNodeRef as unknown as (node: HTMLDivElement | null) => void}
               sortableStyle={style}
               dndDragging={isDragging}
+              clipboardItem={clipboardItem}
+              isInClipboard={clipboardItem?.id === node.id}
+              clipboardOperation={clipboardItem?.id === node.id ? clipboardItem.operation : null}
+
+              // 新增传递：支持嵌套展开
+              expandedStateTree={expandedStateTree}
+              parentFolderId={activeFolderId}
+              onFolderToggle={onFolderToggle}
+              maxDepth={3}
+              currentDepth={0}
+              clearFolderClickTimer={clearFolderClickTimer}
             />
           );
         }
@@ -143,6 +165,8 @@ export default function BookmarkGrid({
             sortableRef={setNodeRef as unknown as (node: HTMLDivElement | null) => void}
             sortableStyle={style}
             dndDragging={isDragging}
+            isInClipboard={clipboardItem?.id === node.id}
+            clipboardOperation={clipboardItem?.id === node.id ? clipboardItem.operation : null}
           />
         );
       }}

@@ -1,6 +1,7 @@
 import type { MouseEvent } from "react";
 import { motion, useReducedMotion, type Transition } from "framer-motion";
 import { cn } from "@/lib/utils";
+import type { ClipboardOperation } from "@/hooks/use-clipboard";
 import { getFaviconUrl } from "../utils";
 import type { ContextMenuTarget } from "../types";
 import type { SortableDragHandle } from "./sortable-grid";
@@ -17,6 +18,8 @@ type BookmarkCardProps = {
   sortableRef?: (node: HTMLDivElement | null) => void;
   sortableStyle?: CSSProperties;
   dndDragging?: boolean;
+  isInClipboard?: boolean;
+  clipboardOperation?: ClipboardOperation | null;
 };
 
 export default function BookmarkCard({
@@ -29,7 +32,9 @@ export default function BookmarkCard({
   dragHandle,
   sortableRef,
   sortableStyle,
-  dndDragging = false
+  dndDragging = false,
+  isInClipboard = false,
+  clipboardOperation = null
 }: BookmarkCardProps) {
   const reduceMotion = useReducedMotion();
   const layoutTransition: Transition = reduceMotion
@@ -62,6 +67,14 @@ export default function BookmarkCard({
         ...(dragHandle.attributes as unknown as Record<string, unknown>),
         ...(dragHandle.listeners as unknown as Record<string, unknown>)
       }
+    : null;
+
+  const clipboardStyle = isInClipboard
+    ? clipboardOperation === "cut"
+      ? "opacity-50 border-dashed !border-2 !border-primary"
+      : clipboardOperation === "copy"
+        ? "border-dashed !border-2 !border-primary"
+        : null
     : null;
 
   return (
@@ -99,7 +112,9 @@ export default function BookmarkCard({
           !dragHandle ? "group-hover:top-[-20%] group-hover:left-[-5%]" : null,
           "group-hover:shadow-card-hover group-hover:bg-glass-strong",
           "group-hover:backdrop-blur-[10px]",
-          dragHandle ? "cursor-grab active:cursor-grabbing" : "cursor-pointer"
+          dragHandle ? "cursor-grab active:cursor-grabbing" : "cursor-pointer",
+          // 剪切板视觉反馈
+          clipboardStyle
         )}
         type="button"
         onClick={(e) => {

@@ -9,6 +9,8 @@ const defaultLayoutState: LayoutState = {
   startupFolderId: null,
   keepFolderExpansion: true,
   expandedFolderIds: [],
+  expandedStateTree: {},
+  expandedStateVersion: 2,
   openInNewTab: false
 };
 
@@ -27,11 +29,75 @@ export async function writeBookmarkSnapshot(tree: BookmarkNode[]): Promise<Bookm
   return snapshot;
 }
 
-export async function readLayoutState(): Promise<LayoutState> {
+/**
+ * 从旧的扁平数组迁移到树形结构
+ * 需要遍历书签树,构建父子关系映射,按层级组织展开状态
+ */
+function migrateExpandedState(
+  tree: BookmarkNode[],
+  oldExpandedIds: string[]
+): Record<string, string[]> {
+  const expandedStateTree: Record<string, string[]> = {};
+
+  // 构建父子关系映射: 子ID -> 父ID
+  const parentMap = new Map<string, string>();
+
+  function buildParentMap(nodes: BookmarkNode[], parentId: string) {
+    for (const node of nodes) {
+      if (!node.url) {  // 只处理文件夹
+        parentMap.set(node.id, parentId);
+        if (node.children) {
+          buildParentMap(node.children, node.id);
+        }
+      }
+    }
+  }
+
+  const rootNodes = tree[0]?.children ?? [];
+  buildParentMap(rootNodes, "__root__");
+
+  // 按父子关系组织展开状态
+  for (const expandedId of oldExpandedIds) {
+    const parentId = parentMap.get(expandedId) ?? "__root__";
+    if (!expandedStateTree[parentId]) {
+      expandedStateTree[parentId] = [];
+    }
+    expandedStateTree[parentId].push(expandedId);
+  }
+
+  return expandedStateTree;
+}
+
+export async function readLayoutState(tree?: BookmarkNode[]): Promise<LayoutState> {
   const result = await chromeApi.storage.local.get(STORAGE_KEYS.LAYOUT);
   const stored = result[STORAGE_KEYS.LAYOUT] as Partial<LayoutState> | undefined;
-  // 兼容旧版本：字段缺失时用默认值补齐。
-  return { ...defaultLayoutState, ...(stored ?? {}) } as LayoutState;
+  const layoutState = { ...defaultLayoutState, ...(stored ?? {}) } as LayoutState;
+
+  // 检测并迁移旧版本数据
+  if (
+    tree &&
+    layoutState.expandedFolderIds &&
+    layoutState.expandedFolderIds.length > 0 &&
+    (!layoutState.expandedStateVersion || layoutState.expandedStateVersion === 1)
+  ) {
+    console.log("[Migration] Converting expandedFolderIds to expandedStateTree");
+
+    const migratedState = {
+      ...layoutState,
+      expandedStateTree: migrateExpandedState(
+        tree,
+        layoutState.expandedFolderIds
+      ),
+      expandedStateVersion: 2 as const,
+      expandedFolderIds: []
+    };
+
+    // 立即写回
+    await writeLayoutState(migratedState);
+    return migratedState;
+  }
+
+  return layoutState;
 }
 
 export async function writeLayoutState(nextState: LayoutState): Promise<void> {

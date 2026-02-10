@@ -7,7 +7,9 @@ export const emptyLayout: LayoutState = {
   lastOpenFolder: null,
   startupFolderId: null,
   keepFolderExpansion: true,
-  expandedFolderIds: []
+  expandedFolderIds: [],
+  expandedStateTree: {},
+  expandedStateVersion: 2
 };
 
 export const findNodeById = (nodes: BookmarkNode[], id: string | null): BookmarkNode | null => {

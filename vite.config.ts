@@ -9,8 +9,11 @@ import manifest from "./src/manifest";
 
 const getGitVersion = () => {
   try {
-    // 匹配 v 开头的语义化版本 tag
-    return execSync('git describe --tags --abbrev=0 --match "v*"').toString().trim();
+    // 只获取当前 commit 上的 tag，没有则返回 null
+    // --points-at HEAD 确保只匹配当前 commit 的 tag
+    const tag = execSync('git tag --points-at HEAD -l "v*"').toString().trim();
+    // 可能有多个 tag，取第一个
+    return tag.split("\n")[0] || null;
   } catch {
     return null;
   }
@@ -28,7 +31,7 @@ export default defineConfig({
   publicDir: false,
   plugins: [react(), tailwindcss(), crx({ manifest })],
   define: {
-    __APP_VERSION__: JSON.stringify(getGitVersion() || getGitCommitHash()),
+    __APP_VERSION__: JSON.stringify(getGitVersion() || "dev"),
     __GIT_COMMIT__: JSON.stringify(getGitCommitHash()),
   },
   resolve: {
