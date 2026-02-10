@@ -1,5 +1,4 @@
 import SettingsSection from "@/newtab/settings/components/section";
-import { Button } from "@/components/ui/button";
 
 export default function AboutTab() {
   return (
@@ -32,17 +31,6 @@ export default function AboutTab() {
             >
               YewFence/YewTab
             </a>
-          </div>
-          <div className="border-t border-border-glass my-3" />
-          <div className="pt-2">
-            <Button
-              variant="secondary"
-              onClick={() => {
-                // 预留：后续可以接 chrome.storage 清理、导出导入等
-              }}
-            >
-              未实现：导出/重置
-            </Button>
           </div>
         </div>
       </SettingsSection>
