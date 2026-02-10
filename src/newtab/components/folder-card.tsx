@@ -2,7 +2,7 @@ import type { MouseEvent } from "react";
 import { useRef, useEffect } from "react";
 import { motion, useReducedMotion, type Transition } from "framer-motion";
 import { cn } from "@/lib/utils";
-import type { ClipboardOperation } from "@/hooks/use-clipboard";
+import type { ClipboardItem, ClipboardOperation } from "@/hooks/use-clipboard";
 import type { BookmarkNode } from "../../shared/types";
 import BookmarkCard from "./bookmark-card";
 import type { ContextMenuTarget } from "../types";
@@ -25,6 +25,7 @@ type FolderCardProps = {
   dndDragging?: boolean;
   isInClipboard?: boolean;
   clipboardOperation?: ClipboardOperation | null;
+  clipboardItem?: ClipboardItem | null;
 
   // 新增 props：支持嵌套展开
   expandedStateTree?: Record<string, string[]>;  // 树形展开状态
@@ -51,6 +52,7 @@ export default function FolderCard({
   dndDragging = false,
   isInClipboard = false,
   clipboardOperation = null,
+  clipboardItem,
   expandedStateTree,
   // parentFolderId,
   onFolderToggle,
@@ -273,6 +275,9 @@ export default function FolderCard({
                     childrenNodes={subChildren}
                     onSubFolderClick={onSubFolderClick}
                     onContextMenu={onContextMenu}
+                    clipboardItem={clipboardItem}
+                    isInClipboard={clipboardItem?.id === node.id}
+                    clipboardOperation={clipboardItem?.id === node.id ? clipboardItem.operation : null}
 
                     // 递归传递 props
                     expandedStateTree={expandedStateTree}
@@ -292,6 +297,8 @@ export default function FolderCard({
                   title={node.title || (node.url ?? "")}
                   url={node.url ?? ""}
                   onContextMenu={onContextMenu}
+                  isInClipboard={clipboardItem?.id === node.id}
+                  clipboardOperation={clipboardItem?.id === node.id ? clipboardItem.operation : null}
                 />
               );
             })}
