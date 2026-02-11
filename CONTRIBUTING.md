@@ -9,7 +9,7 @@
 - **Extension Platform**: WebExtension (Manifest V3)
 - **Frontend Framework**: React 18
 - **Language**: TypeScript 5.5+
-- **Build Tool**: Vite 5.4+
+- **Build Tool**: Vite 7.3+
 - **Linter**: ESLint (w/ typescript-eslint)
 - **Package Manager**: pnpm
 
@@ -50,7 +50,8 @@ pnpm install
 
 ### 3. 常用命令
 - **启动开发服务器**: `pnpm dev`
-  - 这将启动 Vite 的监听模式。
+  - 输出目录为 `dist/`。这是加载到浏览器中的最终代码。
+  - 这将启动 Vite 的监听模式，更改会热重载，刷新页面即可生效
   - 根据个人测试，该热重载功能可能出现异常，有可能是浏览器缓存问题。如果不确定重载是否生效，建议暂时提交更改后重启开发服务器，打开扩展后进入设置页面查看版本hash，打开开发服务器/编译代码时提交hash会注入代码方便用户确认扩展的具体版本。由此你可以确认是否加载了最新一次提交的代码
 - **构建生产版本**: `pnpm build`
   - 输出目录为 `dist/`。这是加载到浏览器中的最终代码。
