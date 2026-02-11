@@ -22,12 +22,298 @@ const createMockTree = (): BookmarkNode[] => [
     children: [
       {
         id: "1",
-        title: "示例文件夹",
+        title: "书签栏",
         children: [
           {
             id: "2",
-            title: "Yew Tab",
-            url: "https://www.example.com"
+            title: "GitHub",
+            url: "https://github.com"
+          },
+          {
+            id: "3",
+            title: "Stack Overflow",
+            url: "https://stackoverflow.com"
+          },
+          {
+            id: "4",
+            title: "前端开发",
+            children: [
+              {
+                id: "5",
+                title: "React 官方文档",
+                url: "https://react.dev"
+              },
+              {
+                id: "6",
+                title: "Tailwind CSS",
+                url: "https://tailwindcss.com"
+              },
+              {
+                id: "7",
+                title: "MDN Web Docs",
+                url: "https://developer.mozilla.org"
+              },
+              {
+                id: "8",
+                title: "TypeScript 文档",
+                url: "https://www.typescriptlang.org/docs"
+              },
+              {
+                id: "9",
+                title: "UI 组件库",
+                children: [
+                  {
+                    id: "10",
+                    title: "shadcn/ui",
+                    url: "https://ui.shadcn.com"
+                  },
+                  {
+                    id: "11",
+                    title: "Radix UI",
+                    url: "https://www.radix-ui.com"
+                  },
+                  {
+                    id: "12",
+                    title: "Headless UI",
+                    url: "https://headlessui.com"
+                  }
+                ]
+              },
+              {
+                id: "13",
+                title: "构建工具",
+                children: [
+                  {
+                    id: "14",
+                    title: "Vite",
+                    url: "https://vitejs.dev"
+                  },
+                  {
+                    id: "15",
+                    title: "Webpack",
+                    url: "https://webpack.js.org"
+                  },
+                  {
+                    id: "16",
+                    title: "Rollup",
+                    url: "https://rollupjs.org"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            id: "17",
+            title: "AI 工具",
+            children: [
+              {
+                id: "18",
+                title: "ChatGPT",
+                url: "https://chat.openai.com"
+              },
+              {
+                id: "19",
+                title: "Claude",
+                url: "https://claude.ai"
+              },
+              {
+                id: "20",
+                title: "Gemini",
+                url: "https://gemini.google.com"
+              },
+              {
+                id: "21",
+                title: "Perplexity",
+                url: "https://www.perplexity.ai"
+              }
+            ]
+          },
+          {
+            id: "22",
+            title: "设计资源",
+            children: [
+              {
+                id: "23",
+                title: "Figma",
+                url: "https://www.figma.com"
+              },
+              {
+                id: "24",
+                title: "Dribbble",
+                url: "https://dribbble.com"
+              },
+              {
+                id: "25",
+                title: "Behance",
+                url: "https://www.behance.net"
+              },
+              {
+                id: "26",
+                title: "Unsplash",
+                url: "https://unsplash.com"
+              },
+              {
+                id: "27",
+                title: "Pexels",
+                url: "https://www.pexels.com"
+              }
+            ]
+          },
+          {
+            id: "28",
+            title: "开发文档",
+            children: [
+              {
+                id: "29",
+                title: "MDN Web Docs",
+                url: "https://developer.mozilla.org"
+              },
+              {
+                id: "30",
+                title: "Node.js 文档",
+                url: "https://nodejs.org/docs"
+              },
+              {
+                id: "31",
+                title: "框架文档",
+                children: [
+                  {
+                    id: "32",
+                    title: "React 文档",
+                    url: "https://react.dev"
+                  },
+                  {
+                    id: "33",
+                    title: "Vue 文档",
+                    url: "https://vuejs.org"
+                  },
+                  {
+                    id: "34",
+                    title: "Angular 文档",
+                    url: "https://angular.io"
+                  },
+                  {
+                    id: "35",
+                    title: "Svelte 文档",
+                    url: "https://svelte.dev"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            id: "36",
+            title: "技术社区",
+            children: [
+              {
+                id: "37",
+                title: "Stack Overflow",
+                url: "https://stackoverflow.com"
+              },
+              {
+                id: "38",
+                title: "GitHub Discussions",
+                url: "https://github.com/discussions"
+              },
+              {
+                id: "39",
+                title: "Dev.to",
+                url: "https://dev.to"
+              },
+              {
+                id: "40",
+                title: "Hacker News",
+                url: "https://news.ycombinator.com"
+              },
+              {
+                id: "41",
+                title: "Reddit - r/programming",
+                url: "https://www.reddit.com/r/programming"
+              }
+            ]
+          },
+          {
+            id: "42",
+            title: "工具箱",
+            children: [
+              {
+                id: "43",
+                title: "Regex101 - 正则表达式测试",
+                url: "https://regex101.com"
+              },
+              {
+                id: "44",
+                title: "Can I Use",
+                url: "https://caniuse.com"
+              },
+              {
+                id: "45",
+                title: "JSON Formatter",
+                url: "https://jsonformatter.org"
+              },
+              {
+                id: "46",
+                title: "Base64 Encode/Decode",
+                url: "https://www.base64encode.org"
+              },
+              {
+                id: "47",
+                title: "Color Picker",
+                url: "https://htmlcolorcodes.com/color-picker"
+              }
+            ]
+          },
+          {
+            id: "48",
+            title: "生产力工具",
+            children: [
+              {
+                id: "49",
+                title: "Notion",
+                url: "https://www.notion.so"
+              },
+              {
+                id: "50",
+                title: "Trello",
+                url: "https://trello.com"
+              },
+              {
+                id: "51",
+                title: "Todoist",
+                url: "https://todoist.com"
+              },
+              {
+                id: "52",
+                title: "Obsidian",
+                url: "https://obsidian.md"
+              }
+            ]
+          },
+          {
+            id: "53",
+            title: "新闻资讯",
+            children: [
+              {
+                id: "54",
+                title: "Hacker News",
+                url: "https://news.ycombinator.com"
+              },
+              {
+                id: "55",
+                title: "TechCrunch",
+                url: "https://techcrunch.com"
+              },
+              {
+                id: "56",
+                title: "The Verge",
+                url: "https://www.theverge.com"
+              },
+              {
+                id: "57",
+                title: "Ars Technica",
+                url: "https://arstechnica.com"
+              }
+            ]
           }
         ]
       }
@@ -36,9 +322,14 @@ const createMockTree = (): BookmarkNode[] => [
 ];
 
 const mockLayoutState: LayoutState = {
-  pinnedIds: [],
+  pinnedIds: ["2", "3"], // 固定 GitHub 和 Stack Overflow
   lastOpenFolder: null,
-  startupFolderId: null
+  startupFolderId: null,
+  expandedStateTree: {
+    "__root__": ["4"]  // 在根目录下展开"前端开发"文件夹
+  },
+  expandedStateVersion: 2,
+  openInNewTab: true
 };
 
 const runtimeListeners = new Set<
