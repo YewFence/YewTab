@@ -12,7 +12,7 @@ YewTab 是一个基于 React 和 Vite 构建的现代浏览器扩展（Manifest 
 
 ![插件效果图](docs/images/folder-expanded.webp)
 
-你也可以访问 [在线 Demo](https://yew-tab-preview.pages.dev/) 体验 UI 和交互效果。
+你也可以访问 [在线 Demo](https://yew-tab-preview.yewfence.dev) 体验 UI 和交互效果。
 
 > **注意**：在线 Demo 使用模拟数据，所有操作（如拖拽排序、编辑书签等）不会持久化保存，刷新页面后会恢复初始状态。如需完整功能，请安装浏览器扩展。
 
