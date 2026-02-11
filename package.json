@@ -5,9 +5,12 @@
   "type": "module",
   "scripts": {
     "dev": "vite --mode development",
+    "dev:web": "vite --config vite.config.web.ts",
     "build": "vite build",
+    "build:web": "vite build --config vite.config.web.ts",
     "lint": "eslint . --max-warnings=0",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "preview:web": "vite preview --outDir dist-web"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",
